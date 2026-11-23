@@ -3,6 +3,9 @@ package io.github.nicolasgoyon.beaconhold.gametest;
 import io.github.nicolasgoyon.beaconhold.Beaconhold;
 import io.github.nicolasgoyon.beaconhold.api.BeaconFunction;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
+import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
+import io.github.nicolasgoyon.beaconhold.function.ChunkRules;
+import io.github.nicolasgoyon.beaconhold.function.LoadedChunks;
 import io.github.nicolasgoyon.beaconhold.function.ModFunctions;
 import io.github.nicolasgoyon.beaconhold.menu.BeaconFunctionMenu;
 import io.github.nicolasgoyon.beaconhold.menu.FunctionButtons;
@@ -41,6 +44,37 @@ public final class FunctionScreenGameTests {
         BlockPos pos = helper.absolutePos(relative);
         player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
         return player;
+    }
+
+    /** The menu gives the loaded chunks of the beacon and of the server, and the limit of the server. */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_screen_chunks")
+    public static void menuShowsTheLoadedChunks(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos beacon = BeaconTestSupport.buildBeacon(helper, 1);
+        Player player = playerAt(helper, BeaconTestSupport.BEACON.east(2));
+        BeaconFunctionMenu menu = BeaconFunctionMenu.server(0, player.getInventory(), level, beacon, 3750);
+        BeaconholdConfig.Server config = BeaconholdConfig.SERVER;
+        int before = config.maxLoadedChunks();
+        int area = ChunkRules.areaChunks(beacon.getX(), beacon.getZ(), config.radius(1)).size();
+        helper.assertFalse(menu.hasLoadedChunks(), "No function: the screen shows no chunks");
+        BeaconholdApi.setFunction(level, beacon, ModFunctions.LOADED_CHUNKS.getKey());
+        helper.assertTrue(menu.hasLoadedChunks(), "The function is \"loaded chunks\"");
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(menu.loadedChunks() == area, "The beacon must load its area"))
+                .thenExecute(() -> {
+                    helper.assertTrue(menu.areaChunks() == area, "The menu gives the chunks of the area");
+                    helper.assertTrue(
+                            menu.serverChunks() == LoadedChunks.totalLoadedChunks(level),
+                            "The menu gives the chunks of the server");
+                    helper.assertTrue(menu.serverLimit() == before, "The menu gives the limit");
+                    config.setMaxLoadedChunks(100_000);
+                    helper.assertTrue(menu.serverLimit() == 100_000, "The menu gives a limit above 32767");
+                    config.setMaxLoadedChunks(before);
+                    BeaconTestSupport.removeBeacon(helper);
+                    helper.assertTrue(menu.loadedChunks() == 0, "A removed beacon loads no chunk");
+                    helper.assertTrue(menu.areaChunks() == 0, "A removed beacon has no area");
+                })
+                .thenSucceed();
     }
 
     /** A click on a function selects it. A new selection replaces the function. The button "none" removes it. */

@@ -45,6 +45,8 @@
   "container.beaconhold.beacon_functions": "Beacon functions",
   "fml.menu.mods.info.description.beaconhold": "More functions for the beacon, and an API so that other mods add functions to the beacon.",
   "screen.beaconhold.functions.back": "Back",
+  "screen.beaconhold.functions.chunks": "Chunks: %s · server: %s/%s",
+  "screen.beaconhold.functions.chunks.tooltip": "The beacon loads %s of the %s chunks of its area. All the beacons of the server load %s chunks. The limit of the server is %s chunks.",
   "screen.beaconhold.functions.cost": "Cost: 1 consumable item every %s min %s s.",
   "screen.beaconhold.functions.cost.short": "%s min %s s for each item",
   "screen.beaconhold.functions.cost.stack": "A stack of %s items lasts about %s game days.",

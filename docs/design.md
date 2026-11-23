@@ -97,6 +97,8 @@ The mod has the API for other mods, the area of a beacon and the command for the
   - The button "Functions" next to the vanilla beacon screen opens the function screen. The rules of the vanilla beacon screen (distance, lock) also apply to the function screen.
   - The function screen lists the functions of the registry, sorted by id, with an icon. The entry "No function" removes the function. With more than 5 entries, the screen has pages.
   - The screen shows the function of the beacon, its state (active or not active), the stock of the consumable and the cost.
+  - For the function "loaded chunks", the screen also shows the chunks that the beacon loads. It also shows the chunks that all the beacons of the server load, and the limit of the server.
+  - The screen shows this text in red when the limit gives the beacon fewer chunks than its area. The tooltip of the text also gives the number of chunks of the area.
   - A click on a function selects it. A new selection replaces the current function. The server checks the selection.
   - The button "Back" opens the vanilla beacon screen again.
 - The beacon saves its function. A beacon that a player breaks loses its function.
