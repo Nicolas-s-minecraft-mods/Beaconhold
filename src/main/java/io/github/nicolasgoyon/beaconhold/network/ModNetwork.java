@@ -1,6 +1,7 @@
 package io.github.nicolasgoyon.beaconhold.network;
 
 import io.github.nicolasgoyon.beaconhold.client.dome.DomeAreas;
+import io.github.nicolasgoyon.beaconhold.menu.ModMenus;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -27,5 +28,9 @@ public final class ModNetwork {
         PayloadRegistrar registrar = event.registrar(VERSION);
         registrar.playToClient(
                 AreaSyncPayload.TYPE, AreaSyncPayload.STREAM_CODEC, (payload, context) -> DomeAreas.set(payload.areas()));
+        registrar.playToServer(
+                OpenFunctionsPayload.TYPE,
+                OpenFunctionsPayload.STREAM_CODEC,
+                (payload, context) -> ModMenus.openFunctions(context.player()));
     }
 }
