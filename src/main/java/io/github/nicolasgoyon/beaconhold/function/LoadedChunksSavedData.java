@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
@@ -35,7 +36,7 @@ public final class LoadedChunksSavedData extends SavedData {
                 .computeIfAbsent(new Factory<>(LoadedChunksSavedData::new, LoadedChunksSavedData::load), NAME);
     }
 
-    private static LoadedChunksSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
+    static LoadedChunksSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
         LoadedChunksSavedData data = new LoadedChunksSavedData();
         ListTag list = tag.getList(TAG_BEACONS, Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
@@ -84,6 +85,15 @@ public final class LoadedChunksSavedData extends SavedData {
             beacons.put(pos.immutable(), new LongOpenHashSet(chunks));
         }
         setDirty();
+    }
+
+    /**
+     * Gives the positions of the beacons that load chunks.
+     *
+     * @return a copy of the positions
+     */
+    public List<BlockPos> positions() {
+        return List.copyOf(beacons.keySet());
     }
 
     /**

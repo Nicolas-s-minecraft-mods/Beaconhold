@@ -6,6 +6,7 @@ import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import io.github.nicolasgoyon.beaconhold.function.ChunkRules;
 import io.github.nicolasgoyon.beaconhold.function.LoadedChunks;
+import io.github.nicolasgoyon.beaconhold.function.LoadedChunksSavedData;
 import io.github.nicolasgoyon.beaconhold.function.ModFunctions;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -157,6 +158,49 @@ public final class LoadedChunksGameTests {
                     BeaconTestSupport.removeBeacon(helper);
                 })
                 .thenSucceed();
+    }
+
+    /**
+     * At the start of the server, an active beacon gets a ticket again for each chunk of the saved list. The test removes
+     * the tickets of NeoForge and keeps the saved list, as after a stop of the server between the two saves.
+     */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_chunks_restore")
+    public static void restoreGivesBackTheMissingTickets(GameTestHelper helper) {
+        BlockPos beacon = activeBeacon(helper, 1);
+        ServerLevel level = helper.getLevel();
+        LongSet chunks = new LongOpenHashSet();
+        helper.startSequence()
+                .thenWaitUntil(() -> assertAreaChunks(helper, beacon, 1))
+                .thenExecute(() -> {
+                    chunks.addAll(LoadedChunks.chunksOf(level, beacon));
+                    for (long chunk : chunks) {
+                        ChunkPos pos = new ChunkPos(chunk);
+                        LoadedChunks.CONTROLLER.forceChunk(level, beacon, pos.x, pos.z, false, true);
+                    }
+                    helper.assertFalse(
+                            forcedTickingChunks(level).contains(new ChunkPos(beacon).toLong()),
+                            "The test must remove the tickets");
+                    LoadedChunks.restore(level);
+                    assertAreaChunks(helper, beacon, 1);
+                    BeaconTestSupport.removeBeacon(helper);
+                    assertNoChunk(helper, beacon, chunks);
+                })
+                .thenSucceed();
+    }
+
+    /** At the start of the server, a saved position with no active beacon releases its chunks and its tickets. */
+    @GameTest(template = "empty", batch = "beaconhold_chunks_restore_stale")
+    public static void restoreReleasesTheChunksOfAMissingBeacon(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos missing = helper.absolutePos(BlockPos.ZERO).offset(4096, 0, 0);
+        ChunkPos chunk = new ChunkPos(missing);
+        LoadedChunks.CONTROLLER.forceChunk(level, missing, chunk.x, chunk.z, true, true);
+        LoadedChunksSavedData.get(level).set(missing, new LongOpenHashSet(new long[] {chunk.toLong()}));
+        helper.assertTrue(forcedTickingChunks(level).contains(chunk.toLong()), "The test must add a ticket");
+        LoadedChunks.restore(level);
+        helper.assertTrue(LoadedChunks.chunksOf(level, missing).isEmpty(), "The saved list must have no chunk");
+        helper.assertFalse(forcedTickingChunks(level).contains(chunk.toLong()), "NeoForge must have no ticket");
+        helper.succeed();
     }
 
     /** A beacon with another function loads no chunk. */

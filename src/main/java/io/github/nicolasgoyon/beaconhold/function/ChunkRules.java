@@ -1,5 +1,6 @@
 package io.github.nicolasgoyon.beaconhold.function;
 
+import io.github.nicolasgoyon.beaconhold.beacon.BeaconRecord;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import java.util.ArrayList;
@@ -7,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.core.SectionPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ChunkPos;
 
 /** The rules of the function "loaded chunks": the chunks of a beacon and the limit of the server. */
@@ -92,5 +94,17 @@ public final class ChunkRules {
             result.removeAll(savedChunks);
         }
         return result;
+    }
+
+    /**
+     * Tells if a beacon keeps its saved chunks when the server starts.
+     *
+     * @param beacon the record of the beacon in the saved list of the beacons, or {@code null} if the list has no beacon
+     *     at this position
+     * @param loadedChunks the id of the function "loaded chunks"
+     * @return true if the beacon is active with the function "loaded chunks"
+     */
+    public static boolean keepsChunks(@Nullable BeaconRecord beacon, ResourceLocation loadedChunks) {
+        return beacon != null && beacon.active() && beacon.function().equals(loadedChunks);
     }
 }

@@ -1,13 +1,17 @@
 package io.github.nicolasgoyon.beaconhold.function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.github.nicolasgoyon.beaconhold.beacon.BeaconRecord;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ChunkPos;
 import org.junit.jupiter.api.Test;
 
@@ -118,5 +122,16 @@ class ChunkRulesTest {
 
     private static ChunkPos offset(int dx, int dz) {
         return new ChunkPos(CENTER.x + dx, CENTER.z + dz);
+    }
+
+    @Test
+    void onlyAnActiveBeaconWithTheFunctionKeepsItsChunks() {
+        ResourceLocation loadedChunks = ResourceLocation.fromNamespaceAndPath("beaconhold", "loaded_chunks");
+        ResourceLocation other = ResourceLocation.fromNamespaceAndPath("beaconhold", "no_hostile_spawns");
+        BlockPos pos = new BlockPos(3, 64, -7);
+        assertTrue(ChunkRules.keepsChunks(new BeaconRecord(pos, 2, true, loadedChunks), loadedChunks));
+        assertFalse(ChunkRules.keepsChunks(new BeaconRecord(pos, 2, false, loadedChunks), loadedChunks));
+        assertFalse(ChunkRules.keepsChunks(new BeaconRecord(pos, 2, true, other), loadedChunks));
+        assertFalse(ChunkRules.keepsChunks(null, loadedChunks));
     }
 }
