@@ -21,6 +21,8 @@ The mod has the API for other mods, the area of a beacon and the command for the
 - The function of a beacon is an addition to the vanilla powers. The beacon keeps its vanilla powers. The vanilla powers use the area of the beacon (see [Area](#area)).
 - A beacon is **on** when these conditions are true: the pyramid level is 1 or more, no block stops the beam, and the beacon has fuel or a stock of the consumable.
 - Each other beacon is **off**: it has no beam, no vanilla powers, no function and no dome (see [Cost](#cost)).
+- A beacon that is off is silent. It plays no ambient sound, no activation sound and no deactivation sound.
+- A beacon plays the activation sound when it goes on, for example when a stock of the consumable turns it on. It plays the deactivation sound when it goes off: the pyramid is not complete, a block stops the beam, or the consumable ends.
 - A function is **active** when all these conditions are true:
   1. The beacon has a function.
   2. The pyramid level is 1 or more.

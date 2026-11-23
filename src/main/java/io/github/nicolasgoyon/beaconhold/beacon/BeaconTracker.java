@@ -21,6 +21,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.common.NeoForge;
@@ -94,6 +95,7 @@ public final class BeaconTracker {
         boolean canOperate = pyramidLevel > 0 && !beacon.getBeamSections().isEmpty();
         boolean active = BeaconStock.operate(level, beacon, wasOn, canOperate, periodic);
         BeaconPower.update(beacon, active);
+        playPowerSound(level, pos, PowerRules.powerSound(wasOn, active, canOperate));
         if (periodic && active && BeaconholdConfig.SERVER.consumableRequired()) {
             long remaining = BeaconStock.remainingTicks(beacon);
             if (WarningRules.isLow(remaining)) {
@@ -118,6 +120,15 @@ public final class BeaconTracker {
             BlockPos pos = beacon.pos();
             if (level.isLoaded(pos) && !(level.getBlockEntity(pos) instanceof BeaconBlockEntity)) {
                 apply(level, data, pos, beacon, null);
+            }
+        }
+    }
+
+    private static void playPowerSound(ServerLevel level, BlockPos pos, PowerRules.PowerSound sound) {
+        switch (sound) {
+            case ACTIVATE -> BeaconBlockEntity.playSound(level, pos, SoundEvents.BEACON_ACTIVATE);
+            case DEACTIVATE -> BeaconBlockEntity.playSound(level, pos, SoundEvents.BEACON_DEACTIVATE);
+            case NONE -> {
             }
         }
     }
