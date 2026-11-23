@@ -4,7 +4,7 @@ Beaconhold is a mod for Minecraft 1.21.1 (NeoForge). It gives more functions to 
 
 ## State
 
-The mod has the API for other mods, the area of a beacon and the command for the operators. It has the function "no hostile spawns". This document gives the rules of the mod. Each rule that is not in the code yet has the mark **planned** and the number of its issue.
+The mod has the API for other mods, the area of a beacon and the command for the operators. It has the functions "no hostile spawns" and "loaded chunks". This document gives the rules of the mod. Each rule that is not in the code yet has the mark **planned** and the number of its issue.
 
 ## Terms
 
@@ -46,8 +46,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
 
 ### Loaded chunks
 
-**Planned** (#5).
-
+- The id of the function is `beaconhold:loaded_chunks`.
 - An active beacon with this function keeps chunks near it loaded. The chunks tick as if a player is near them: the crops grow and the machines operate.
 - The loaded area is smaller than the area of the other functions. The loaded area is a number of chunks, not a radius in blocks.
 - The beacon loads its own chunk first, then the nearest chunks. The default numbers of chunks:
@@ -59,9 +58,11 @@ The mod has the API for other mods, the area of a beacon and the command for the
   | 3 | 9 | a square of 3 × 3 chunks |
   | 4 | 13 | a circle with a radius of 2 chunks |
 
-- The server option `maxLoadedChunks` sets the maximum number of chunks that all the beacons of the server load together. The default value is 256. When a beacon starts and the limit is near, the beacon loads fewer chunks. It always loads its nearest chunks first.
-- The chunks stay loaded after a restart of the server.
-- When the function stops, the beacon releases its chunks.
+- The server options `chunksLevel1` to `chunksLevel4` set the numbers of chunks.
+- The server option `maxLoadedChunks` sets the maximum number of chunks that all the beacons of the server load together. The default value is 256. When a beacon starts and the limit is near, the beacon loads fewer chunks. It always loads its nearest chunks first. When another beacon releases its chunks, the beacon does not get more chunks. It gets them when it starts its function again.
+- The chunks stay loaded after a restart of the server. NeoForge saves the tickets of the chunks. When the server loads a world, it removes the tickets that the saved list of the beacons does not contain.
+- When the function stops, the beacon releases its chunks. When a pyramid level changes, the beacon releases its chunks, then loads the chunks of the new level.
+- A change of the options has an effect when a beacon starts its function again.
 
 ## Area
 
@@ -146,8 +147,8 @@ The server options are in `serverconfig/beaconhold-server.toml` in the world fol
 |---|---|---|---|
 | `area.radiusLevel1` to `area.radiusLevel4` | server | 20, 47, 73, 100 | #6 |
 | `noHostileSpawns.blockSpawners` | server | off | #4 |
-| `loadedChunks.chunksLevel1` to `loadedChunks.chunksLevel4` | server | 1, 5, 9, 13 | #5 (planned) |
-| `loadedChunks.maxLoadedChunks` | server | 256 | #5 (planned) |
+| `loadedChunks.chunksLevel1` to `loadedChunks.chunksLevel4` | server | 1, 5, 9, 13 | #5 |
+| `loadedChunks.maxLoadedChunks` | server | 256 | #5 |
 | `consumables` | server | amethyst shard, prismarine crystals, nether quartz | #8 (planned) |
 | `dome.enabled` | client | on | #9 (planned) |
 
