@@ -7,7 +7,10 @@ import io.github.nicolasgoyon.beaconhold.network.AreaSync;
 import io.github.nicolasgoyon.beaconhold.registry.ModRegistries;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.WeakHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -15,12 +18,29 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 
 /**
- * Keeps, for each dimension, the loaded beacons that show the energy dome (see {@link DomeRules}). The list is in
- * memory only. Each beacon updates its entry at the interval of the vanilla powers.
+ * Keeps, for each dimension, the loaded beacons that show the energy dome when the server option
+ * {@code area.vanillaPowersUseArea} is on (see {@link DomeRules}). The list is in memory only. Each beacon updates its
+ * entry at the interval of the vanilla powers.
+ *
+ * <p>A beacon with no function shows the dome only when the option is on. {@link #of} reads the option at each call, so
+ * a change of the option changes the domes at once.
  */
 public final class BeamBeacons {
-    /** For each dimension: the position of each beacon (as a long) and its pyramid level. The server thread uses it. */
-    private static final Map<ServerLevel, Long2IntMap> BEACONS = new WeakHashMap<>();
+    /** For each dimension: the position of each beacon (as a long) and its entry. The server thread uses it. */
+    private static final Map<ServerLevel, Long2ObjectMap<Beam>> BEACONS = new WeakHashMap<>();
+
+    /**
+     * The entry of a beacon in the list.
+     *
+     * @param pyramidLevel the pyramid level of the beacon, 1 or more
+     * @param noFunction true if the beacon has no function
+     */
+    private record Beam(int pyramidLevel, boolean noFunction) {
+        boolean showsDome(boolean vanillaPowersUseArea) {
+            return DomeRules.showsDome(
+                    pyramidLevel, true, true, noFunction ? null : Boolean.TRUE, vanillaPowersUseArea);
+        }
+    }
 
     private BeamBeacons() {
     }
@@ -36,20 +56,17 @@ public final class BeamBeacons {
         Boolean showsArea = beacon.getExistingData(ModRegistries.BEACON_FUNCTION)
                 .map(BeamBeacons::showsArea)
                 .orElse(null);
+        // The list keeps the beacons with no function. The method "of" applies the current value of the option.
         boolean shows = DomeRules.showsDome(
-                pyramidLevel,
-                !beacon.getBeamSections().isEmpty(),
-                !BeaconPower.isOff(beacon),
-                showsArea,
-                BeaconholdConfig.SERVER.vanillaPowersUseArea());
+                pyramidLevel, !beacon.getBeamSections().isEmpty(), !BeaconPower.isOff(beacon), showsArea, true);
         long pos = beacon.getBlockPos().asLong();
-        Long2IntMap beacons = BEACONS.computeIfAbsent(level, key -> new Long2IntOpenHashMap());
-        int before = beacons.getOrDefault(pos, 0);
-        int after = shows ? pyramidLevel : 0;
-        if (before == after) {
+        Long2ObjectMap<Beam> beacons = BEACONS.computeIfAbsent(level, key -> new Long2ObjectOpenHashMap<>());
+        Beam before = beacons.get(pos);
+        Beam after = shows ? new Beam(pyramidLevel, showsArea == null) : null;
+        if (Objects.equals(before, after)) {
             return;
         }
-        if (after == 0) {
+        if (after == null) {
             beacons.remove(pos);
         } else {
             beacons.put(pos, after);
@@ -69,7 +86,7 @@ public final class BeamBeacons {
      * @param pos the position of the beacon
      */
     public static void remove(ServerLevel level, BlockPos pos) {
-        Long2IntMap beacons = BEACONS.get(level);
+        Long2ObjectMap<Beam> beacons = BEACONS.get(level);
         if (beacons != null && beacons.containsKey(pos.asLong())) {
             beacons.remove(pos.asLong());
             AreaSync.markChanged(level);
@@ -82,7 +99,7 @@ public final class BeamBeacons {
      * @param level the dimension
      */
     public static void removeMissing(ServerLevel level) {
-        Long2IntMap beacons = BEACONS.get(level);
+        Long2ObjectMap<Beam> beacons = BEACONS.get(level);
         if (beacons == null) {
             return;
         }
@@ -96,13 +113,24 @@ public final class BeamBeacons {
     }
 
     /**
-     * Gives the beacons of a dimension that show the energy dome.
+     * Gives the beacons of a dimension that show the energy dome, with the current value of the option
+     * {@code area.vanillaPowersUseArea}.
      *
      * @param level the dimension
      * @return a copy: the position of each beacon (as a long) and its pyramid level
      */
     public static Long2IntMap of(ServerLevel level) {
-        Long2IntMap beacons = BEACONS.get(level);
-        return beacons == null ? new Long2IntOpenHashMap() : new Long2IntOpenHashMap(beacons);
+        Long2IntMap result = new Long2IntOpenHashMap();
+        Long2ObjectMap<Beam> beacons = BEACONS.get(level);
+        if (beacons == null) {
+            return result;
+        }
+        boolean vanillaPowersUseArea = BeaconholdConfig.SERVER.vanillaPowersUseArea();
+        for (Long2ObjectMap.Entry<Beam> entry : beacons.long2ObjectEntrySet()) {
+            if (entry.getValue().showsDome(vanillaPowersUseArea)) {
+                result.put(entry.getLongKey(), entry.getValue().pyramidLevel());
+            }
+        }
+        return result;
     }
 }

@@ -5,6 +5,7 @@ import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconPower;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
+import io.github.nicolasgoyon.beaconhold.config.ServerOptionChanges;
 import io.github.nicolasgoyon.beaconhold.function.ModFunctions;
 import io.github.nicolasgoyon.beaconhold.network.AreaSync;
 import io.github.nicolasgoyon.beaconhold.network.AreaSyncPayload;
@@ -24,9 +25,6 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class DomeGameTests {
     private static final int TIMEOUT = 300;
-
-    /** The option test waits three updates with the option off, then one or two updates for the dome. */
-    private static final int LONG_TIMEOUT = 600;
 
     private DomeGameTests() {
     }
@@ -95,8 +93,11 @@ public final class DomeGameTests {
                 .thenSucceed();
     }
 
-    /** With the vanilla powers in the vanilla range, a beacon with no function shows no dome. */
-    @GameTest(template = "beacon", timeoutTicks = LONG_TIMEOUT, batch = "beaconhold_dome_beam_vanilla")
+    /**
+     * With the vanilla powers in the vanilla range, a beacon with no function shows no dome. A change of the option
+     * shows the dome at once.
+     */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_dome_beam_vanilla")
     public static void beaconWithNoFunctionHasNoDomeWithTheVanillaRange(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BeaconholdConfig.SERVER.setVanillaPowersUseArea(false);
@@ -105,10 +106,12 @@ public final class DomeGameTests {
                 .thenExecuteAfter((int) BeaconTracker.UPDATE_INTERVAL * 3, () -> {
                     boolean dome = hasAnyArea(level, beacon);
                     BeaconholdConfig.SERVER.setVanillaPowersUseArea(true);
+                    ServerOptionChanges.apply(level.getServer());
                     helper.assertFalse(dome, "No dome with the vanilla range");
+                    helper.assertTrue(hasArea(level, beacon, 20), "The option on gives the dome at once");
+                    helper.assertTrue(AreaSync.isChanged(level), "The server must send the areas again");
+                    BeaconTestSupport.removeBeacon(helper);
                 })
-                .thenWaitUntil(() -> helper.assertTrue(hasArea(level, beacon, 20), "The option on gives the dome again"))
-                .thenExecute(() -> BeaconTestSupport.removeBeacon(helper))
                 .thenSucceed();
     }
 

@@ -188,6 +188,7 @@ A change of the server options applies at once to the active beacons. The server
 
 - The areas use the new radii. The queries of the API and the function "no hostile spawns" use the new areas.
 - The clients get the areas again, so the domes show the new areas.
+- A beacon with no function shows or hides its dome at once when the option `area.vanillaPowersUseArea` changes.
 - The beacons with the function "loaded chunks" load the chunks of their new areas, with the new limit. The beacons get their chunks in the order of the dimensions, then in the order of their start. A beacon that started first keeps its chunks first.
 - A change of the options gives no `Start` event and no `Stop` event. Each active beacon whose radius changes gives an `AreaChange` event, with the old area and the new area.
 
