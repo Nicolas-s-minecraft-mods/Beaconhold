@@ -2,6 +2,8 @@ package io.github.nicolasgoyon.beaconhold.client.screen;
 
 import io.github.nicolasgoyon.beaconhold.api.BeaconFunction;
 import io.github.nicolasgoyon.beaconhold.cost.CostRules;
+import io.github.nicolasgoyon.beaconhold.cost.FuelRules;
+import io.github.nicolasgoyon.beaconhold.cost.ModTags;
 import io.github.nicolasgoyon.beaconhold.menu.BeaconFunctionMenu;
 import io.github.nicolasgoyon.beaconhold.menu.FunctionButtons;
 import io.github.nicolasgoyon.beaconhold.menu.FunctionList;
@@ -12,22 +14,26 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
  * The function screen of a beacon. It shows the functions of the registry, the function of the beacon and its state,
- * and the cost. A click on a function sends the id of its button to the server.
+ * the cost and the stock of the consumable. The cost does not depend on the function. A click on a function sends the id of its button to the server.
  */
 public final class BeaconFunctionScreen extends AbstractContainerScreen<BeaconFunctionMenu> {
     private static final String PREFIX = "screen.beaconhold.functions.";
-    private static final int ROWS = 5;
+    private static final int ROWS = 3;
     private static final int ROW_HEIGHT = 22;
     private static final int LIST_TOP = 30;
+    private static final int BAR_Y = 120;
+    private static final int STOCK_TEXT_X = 30;
     private static final int TEXT_COLOR = 0x404040;
     private static final int ACTIVE_COLOR = 0x2E7D32;
     private static final int INACTIVE_COLOR = 0xA02020;
@@ -41,7 +47,7 @@ public final class BeaconFunctionScreen extends AbstractContainerScreen<BeaconFu
     public BeaconFunctionScreen(BeaconFunctionMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         this.imageWidth = 176;
-        this.imageHeight = 200;
+        this.imageHeight = 228;
     }
 
     @Override
@@ -68,12 +74,14 @@ public final class BeaconFunctionScreen extends AbstractContainerScreen<BeaconFu
             }
             Button button = Button.builder(entryName(entry), b -> click(entry))
                     .bounds(leftPos + 8, topPos + LIST_TOP + row * ROW_HEIGHT, 160, 20)
-                    .tooltip(Tooltip.create(entryTooltip(entry)))
                     .build();
+            if (entry == FunctionButtons.NONE) {
+                button.setTooltip(Tooltip.create(Component.translatable(PREFIX + "none.tooltip")));
+            }
             rows.add(addRenderableWidget(button));
             rowEntries.add(entry);
         }
-        int bottom = topPos + imageHeight - 26;
+        int bottom = topPos + BAR_Y;
         addRenderableWidget(Button.builder(Component.translatable(PREFIX + "back"), b -> click(FunctionButtons.BACK))
                 .bounds(leftPos + 8, bottom, 60, 20)
                 .build());
@@ -130,13 +138,6 @@ public final class BeaconFunctionScreen extends AbstractContainerScreen<BeaconFu
         return BeaconFunction.name(functions.get(FunctionButtons.functionOf(entry)));
     }
 
-    private Component entryTooltip(int entry) {
-        if (entry == FunctionButtons.NONE) {
-            return Component.translatable(PREFIX + "none.tooltip");
-        }
-        return costText();
-    }
-
     private MutableComponent costText() {
         int ticks = menu.ticksPerItem();
         return Component.translatable(PREFIX + "cost", CostRules.minutes(ticks), CostRules.seconds(ticks))
@@ -161,6 +162,25 @@ public final class BeaconFunctionScreen extends AbstractContainerScreen<BeaconFu
             graphics.renderItem(entryIcon(rowEntries.get(i)), row.getX() + 2, row.getY() + 2);
         }
         renderTooltip(graphics, mouseX, mouseY);
+        if (menu.getCarried().isEmpty()
+                && hoveredSlot != null
+                && hoveredSlot.index == BeaconFunctionMenu.STOCK_SLOT
+                && !hoveredSlot.hasItem()) {
+            graphics.renderComponentTooltip(font, stockTooltip(), mouseX, mouseY);
+        }
+        int costY = topPos + BeaconFunctionMenu.STOCK_Y + 1;
+        if (mouseX >= leftPos + STOCK_TEXT_X && mouseX < leftPos + imageWidth - 4 && mouseY >= costY
+                && mouseY < costY + 19) {
+            graphics.renderTooltip(font, font.split(costText(), 200), mouseX, mouseY);
+        }
+    }
+
+    private List<Component> stockTooltip() {
+        List<Component> lines = new ArrayList<>();
+        lines.add(Component.translatable(PREFIX + "stock.accepts"));
+        BuiltInRegistries.ITEM.getTag(ModTags.CONSUMABLES).ifPresent(items -> items.forEach(
+                item -> lines.add(Component.literal("- ").append(item.value().getDescription()))));
+        return lines;
     }
 
     @Override
@@ -173,6 +193,13 @@ public final class BeaconFunctionScreen extends AbstractContainerScreen<BeaconFu
         graphics.fill(leftPos, topPos, leftPos + 1, bottom - 1, 0xFFFFFFFF);
         graphics.fill(leftPos + 1, bottom - 1, right, bottom, 0xFF555555);
         graphics.fill(right - 1, topPos + 1, right, bottom, 0xFF555555);
+        for (Slot slot : menu.slots) {
+            int x = leftPos + slot.x - 1;
+            int y = topPos + slot.y - 1;
+            graphics.fill(x, y, x + 18, y + 18, 0xFF373737);
+            graphics.fill(x + 1, y + 1, x + 18, y + 18, 0xFFFFFFFF);
+            graphics.fill(x + 1, y + 1, x + 17, y + 17, 0xFF8B8B8B);
+        }
     }
 
     @Override
@@ -191,6 +218,21 @@ public final class BeaconFunctionScreen extends AbstractContainerScreen<BeaconFu
             color = INACTIVE_COLOR;
         }
         graphics.drawString(font, state, 8, 18, color, false);
-        graphics.drawWordWrap(font, costText(), 8, LIST_TOP + ROWS * ROW_HEIGHT + 2, imageWidth - 16, TEXT_COLOR);
+        long remaining = menu.remainingTicks();
+        int stockY = BeaconFunctionMenu.STOCK_Y + 1;
+        if (remaining <= 0) {
+            graphics.drawString(font, Component.translatable(PREFIX + "stock.empty"), STOCK_TEXT_X, stockY,
+                    INACTIVE_COLOR, false);
+        } else if (FuelRules.isLow(remaining)) {
+            graphics.drawString(font, Component.translatable(PREFIX + "stock.low", CostRules.days(remaining)),
+                    STOCK_TEXT_X, stockY, INACTIVE_COLOR, false);
+        } else {
+            graphics.drawString(font, Component.translatable(PREFIX + "stock", CostRules.days(remaining)),
+                    STOCK_TEXT_X, stockY, TEXT_COLOR, false);
+        }
+        int ticks = menu.ticksPerItem();
+        graphics.drawString(font,
+                Component.translatable(PREFIX + "cost.short", CostRules.minutes(ticks), CostRules.seconds(ticks)),
+                STOCK_TEXT_X, stockY + 10, TEXT_COLOR, false);
     }
 }

@@ -86,7 +86,14 @@ for (ActiveBeacon beacon : BeaconholdApi.beaconsCovering(serverLevel, pos, shiel
 
 The area is a vertical cylinder for the full height of the world. `BeaconArea.contains(pos)` uses only the X and Z coordinates.
 
-A function is active when the beacon has the function, a pyramid level of 1 or more, and no block stops its beam. A beacon updates its state each 80 ticks (4 seconds). A beacon in a chunk that is not loaded keeps its last state.
+A function is active when all these conditions are true:
+
+- The beacon has the function.
+- The pyramid level is 1 or more.
+- No block stops the beam.
+- The beacon has fuel or a stock of the consumable.
+
+A beacon updates its state each 80 ticks (4 seconds). A beacon in a chunk that is not loaded keeps its last state.
 
 ## Get and set the function of a beacon
 
@@ -103,7 +110,12 @@ BeaconholdApi.setFunction(serverLevel, beaconPos, null); // removes the function
 The server posts the events on `NeoForge.EVENT_BUS`:
 
 - `BeaconFunctionEvent.Start`: a beacon starts a function.
-- `BeaconFunctionEvent.Stop`: a beacon stops a function. Causes: a block stops the beam, the pyramid is not complete, the function changes, or a player or an explosion removes the beacon.
+- `BeaconFunctionEvent.Stop`: a beacon stops a function. The causes:
+  - A block stops the beam.
+  - The pyramid is not complete.
+  - The beacon has no consumable.
+  - The function changes.
+  - A player or an explosion removes the beacon.
 
 A change of the pyramid level gives a `Stop` event with the old area, then a `Start` event with the new area.
 

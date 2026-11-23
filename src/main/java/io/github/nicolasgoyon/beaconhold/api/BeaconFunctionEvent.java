@@ -55,8 +55,9 @@ public abstract class BeaconFunctionEvent extends Event {
     /**
      * A beacon stops a function. The queries of {@link BeaconholdApi} do not include the beacon.
      *
-     * <p>The beacon stops its function when a block stops the beam, when the pyramid level is 0, when the beacon gets a
-     * different function or no function, and when a player or an explosion removes the beacon.
+     * <p>The beacon stops its function when a block stops the beam, when the pyramid level is 0, when the beacon has no
+     * consumable, when the beacon gets a different function or no function, and when a player or an explosion removes
+     * the beacon.
      */
     public static final class Stop extends BeaconFunctionEvent {
         /**

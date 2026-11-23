@@ -4,7 +4,7 @@ Beaconhold is a mod for Minecraft 1.21.1 (NeoForge). It gives more functions to 
 
 ## State
 
-The mod has the API for other mods, the area of a beacon, the command for the operators, the function screen and the energy dome. It has the functions "no hostile spawns" and "loaded chunks". This document gives the rules of the mod. Each rule that is not in the code yet has the mark **planned** and the number of its issue.
+The mod has the API for other mods, the area of a beacon and the command for the operators. It also has the function screen, the cost and the energy dome. It has the functions "no hostile spawns" and "loaded chunks". This document gives the rules of the mod. Each rule that is not in the code yet has the mark **planned** and the number of its issue.
 
 ## Terms
 
@@ -23,7 +23,7 @@ The mod has the API for other mods, the area of a beacon, the command for the op
   1. The beacon has a function.
   2. The pyramid level is 1 or more.
   3. No block stops the beam.
-  4. The beacon has a stock of the consumable (see [Cost](#cost)). **Planned** (#8).
+  4. The beacon has fuel or a stock of the consumable (see [Cost](#cost)).
 - A beacon with no active function has no effect of Beaconhold.
 
 ### No hostile spawns
@@ -90,27 +90,26 @@ The mod has the API for other mods, the area of a beacon, the command for the op
 - The player selects the function in the function screen of the beacon:
   - The button "Functions" next to the vanilla beacon screen opens the function screen. The rules of the vanilla beacon screen (distance, lock) also apply to the function screen.
   - The function screen lists the functions of the registry, sorted by id, with an icon. The entry "No function" removes the function. With more than 5 entries, the screen has pages.
-  - The screen shows the function of the beacon, its state (active or not active) and the cost. The tooltip of each function also shows the cost.
+  - The screen shows the function of the beacon, its state (active or not active), the stock of the consumable and the cost.
   - A click on a function selects it. A new selection replaces the current function. The server checks the selection.
   - The button "Back" opens the vanilla beacon screen again.
 - The beacon saves its function. A beacon that a player breaks loses its function.
 
 ## Cost
 
-- All the functions have the same cost. The server option `cost.ticksPerItem` gives the number of ticks for each item of the consumable. The default value is 3,750 ticks, so one stack of 64 items lasts 10 game days. The function screen shows this cost.
-
-### Consumption
-
-**Planned** (#8).
-
-- An active function uses a consumable. The player puts one stack of the consumable in the beacon.
-- The consumable is an item of the game. The server option `consumables` gives the list of the items that the beacon accepts. The default list:
+- The consumable keeps the function of the beacon active. The cost does not depend on the function, and all the functions use the same consumable.
+- The consumable is an item of the game. The beacon accepts the items of the item tag `beaconhold:beacon_consumables`. The items are alternatives for the same fuel. The list:
   - amethyst shard,
   - prismarine crystals,
   - nether quartz.
-- The owner of the project did not confirm the items. The list stays a server option.
-- With no consumable, the function stops. The beacon keeps its vanilla powers.
-- The beacon screen shows the stock. The player gets a sign when the stock is low.
+- A data pack can change the tag.
+- The player puts one stack of the consumable in the slot of the function screen. The slot accepts one stack of one item.
+- The server option `cost.ticksPerItem` gives the number of ticks for each item. The default value is 3,750 ticks, so one stack of 64 items lasts 10 game days.
+- The beacon has a fuel: the ticks that the last item still gives. When the fuel is empty and the function can operate, the beacon takes one item from the stock. Each update removes the ticks of operation from the fuel.
+- A beacon uses its consumable only when it has a function, a pyramid and a free beam. A beacon in a chunk that is not loaded uses no consumable.
+- With no fuel and no stock, the function stops. The beacon keeps its function and its vanilla powers. A new stock starts the function again.
+- The function screen shows the time that the stock and the fuel give, in game days. With less than one game day, the screen shows the text in red, and the beacon makes smoke at each update.
+- A beacon that a player or an explosion removes drops its stock. The fuel of the last item is lost.
 
 ## Saved data and updates
 
@@ -159,15 +158,14 @@ The server options are in `serverconfig/beaconhold-server.toml` in the world fol
 | `loadedChunks.chunksLevel1` to `loadedChunks.chunksLevel4` | server | 1, 5, 9, 13 | #5 |
 | `loadedChunks.maxLoadedChunks` | server | 256 | #5 |
 | `cost.ticksPerItem` | server | 3750 | #7 |
-| `consumables` | server | amethyst shard, prismarine crystals, nether quartz | #8 (planned) |
+| `beaconhold:beacon_consumables` | item tag (data) | amethyst shard, prismarine crystals, nether quartz | #8 |
 | `dome.enabled` | client | on | #9 |
 
 ## Open questions
 
 The owner of the project gives the answers. Until then, the design uses the default values above, and an option keeps each value open.
 
-1. The radius for each pyramid level: the default radii go from 20 to 100 blocks in equal steps. Are other values better?
-2. Loaded chunks: are 13 chunks at level 4 correct for "about 15 chunks"? Is a limit for each player necessary, in addition to the limit of the server? A limit for each player needs the beacon to save the player that placed it.
-3. No hostile spawns: do the raids, the trial spawners or the reinforcements of zombies also stop?
-4. Consumable: which 2 or 3 items? Does each function use a different item?
-5. Selection: the function screen opens from a button next to the vanilla beacon screen. Is a separate screen correct? Do the functions have different costs?
+1. Loaded chunks: are 13 chunks at level 4 correct for "about 15 chunks"? Is a limit for each player necessary, in addition to the limit of the server? A limit for each player needs the beacon to save the player that placed it.
+2. No hostile spawns: do the raids, the trial spawners or the reinforcements of zombies also stop?
+3. Consumable: does a beacon with no function also use the consumable?
+4. Selection: the function screen opens from a button next to the vanilla beacon screen. Is a separate screen correct?

@@ -11,7 +11,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Updates the record of a beacon after the tick of the beacon, at the interval of the vanilla powers. */
+/**
+ * Updates the record and the stock of a beacon after the tick of the beacon, at the interval of the vanilla powers.
+ */
 // Mixin calls the injected method. The parameters must be the same as the parameters of the target method.
 @SuppressWarnings({"UnusedMethod", "UnusedVariable"})
 @Mixin(BeaconBlockEntity.class)
@@ -21,7 +23,7 @@ public abstract class BeaconBlockEntityMixin {
             Level level, BlockPos pos, BlockState state, BeaconBlockEntity beacon, CallbackInfo info) {
         if (level instanceof ServerLevel serverLevel
                 && level.getGameTime() % BeaconTracker.UPDATE_INTERVAL == 0L) {
-            BeaconTracker.update(serverLevel, beacon);
+            BeaconTracker.update(serverLevel, beacon, true);
         }
     }
 }

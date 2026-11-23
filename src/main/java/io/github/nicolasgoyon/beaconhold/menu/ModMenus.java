@@ -76,7 +76,7 @@ public final class ModMenus {
         int ticksPerItem = BeaconholdConfig.SERVER.ticksPerItem();
         SimpleMenuProvider provider = new SimpleMenuProvider(
                 (containerId, inventory, menuPlayer) ->
-                        BeaconFunctionMenu.server(containerId, level, pos, ticksPerItem),
+                        BeaconFunctionMenu.server(containerId, inventory, level, pos, ticksPerItem),
                 Component.translatable(TITLE));
         return player.openMenu(provider, buffer -> buffer.writeVarInt(ticksPerItem)).isPresent();
     }
