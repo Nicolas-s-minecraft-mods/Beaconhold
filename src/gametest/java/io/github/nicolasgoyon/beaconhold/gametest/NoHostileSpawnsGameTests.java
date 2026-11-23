@@ -11,7 +11,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.monster.Vindicator;
+import net.minecraft.world.entity.raid.Raid;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.TrialSpawnerBlockEntity;
 import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -36,6 +39,23 @@ public final class NoHostileSpawnsGameTests {
         helper.assertTrue(mob != null, "The game must make the mob");
         mob.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
         EventHooks.finalizeMobSpawn(mob, level, level.getCurrentDifficultyAt(pos), spawnType, null);
+        return mob;
+    }
+
+    /** Makes a zombie at a position and finalizes its spawn as a spawn of a trial spawner. */
+    private static Mob finalizeTrialSpawn(GameTestHelper helper, TrialSpawnerBlockEntity spawner, BlockPos pos) {
+        ServerLevel level = helper.getLevel();
+        Mob mob = EntityType.ZOMBIE.create(level);
+        helper.assertTrue(mob != null, "The game must make the mob");
+        mob.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        EventHooks.finalizeMobSpawnSpawner(
+                mob,
+                level,
+                level.getCurrentDifficultyAt(pos),
+                MobSpawnType.TRIAL_SPAWNER,
+                null,
+                spawner.getTrialSpawner(),
+                true);
         return mob;
     }
 
@@ -86,7 +106,10 @@ public final class NoHostileSpawnsGameTests {
                 .thenSucceed();
     }
 
-    /** The function does not stop the patrols, the raids and the trial spawners. It stops the spawners only with the option. */
+    /**
+     * The function does not stop the patrols and the raids. It stops the spawners and the trial spawners only with the
+     * option.
+     */
     @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_spawn_types")
     public static void otherSpawnTypesFollowTheRules(GameTestHelper helper) {
         BlockPos beacon = activeBeacon(helper);
@@ -100,10 +123,6 @@ public final class NoHostileSpawnsGameTests {
                     helper.assertFalse(
                             finalizeSpawn(helper, EntityType.VINDICATOR, pos, MobSpawnType.EVENT).isSpawnCancelled(),
                             "A raid must spawn");
-                    helper.assertFalse(
-                            finalizeSpawn(helper, EntityType.ZOMBIE, pos, MobSpawnType.TRIAL_SPAWNER)
-                                    .isSpawnCancelled(),
-                            "A trial spawner must spawn");
                     BeaconholdConfig.Server config = BeaconholdConfig.SERVER;
                     boolean before = config.blockSpawners();
                     try {
@@ -111,10 +130,76 @@ public final class NoHostileSpawnsGameTests {
                         helper.assertFalse(
                                 finalizeSpawn(helper, EntityType.ZOMBIE, pos, MobSpawnType.SPAWNER).isSpawnCancelled(),
                                 "Option off: a spawner must spawn");
+                        helper.assertFalse(
+                                finalizeSpawn(helper, EntityType.ZOMBIE, pos, MobSpawnType.TRIAL_SPAWNER)
+                                        .isSpawnCancelled(),
+                                "Option off: a trial spawner must spawn");
                         config.setBlockSpawners(true);
                         helper.assertTrue(
                                 finalizeSpawn(helper, EntityType.ZOMBIE, pos, MobSpawnType.SPAWNER).isSpawnCancelled(),
                                 "Option on: a spawner must not spawn");
+                        helper.assertTrue(
+                                finalizeSpawn(helper, EntityType.ZOMBIE, pos, MobSpawnType.TRIAL_SPAWNER)
+                                        .isSpawnCancelled(),
+                                "Option on: a trial spawner must not spawn");
+                    } finally {
+                        config.setBlockSpawners(before);
+                    }
+                    BeaconTestSupport.removeBeacon(helper);
+                })
+                .thenSucceed();
+    }
+
+    /** A real trial spawner follows the option of the spawners. */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_spawn_trial")
+    public static void trialSpawnerFollowsTheOption(GameTestHelper helper) {
+        BlockPos beacon = activeBeacon(helper);
+        BlockPos spawnerPos = BeaconTestSupport.BEACON.offset(2, 0, 2);
+        helper.setBlock(spawnerPos, Blocks.TRIAL_SPAWNER);
+        helper.startSequence()
+                .thenWaitUntil(() -> waitUntilActive(helper, beacon))
+                .thenExecute(() -> {
+                    TrialSpawnerBlockEntity spawner = helper.getBlockEntity(spawnerPos);
+                    BlockPos pos = beacon.offset(5, 1, 5);
+                    BeaconholdConfig.Server config = BeaconholdConfig.SERVER;
+                    boolean before = config.blockSpawners();
+                    try {
+                        config.setBlockSpawners(false);
+                        helper.assertFalse(
+                                finalizeTrialSpawn(helper, spawner, pos).isSpawnCancelled(),
+                                "Option off: the trial spawner must spawn");
+                        config.setBlockSpawners(true);
+                        helper.assertTrue(
+                                finalizeTrialSpawn(helper, spawner, pos).isSpawnCancelled(),
+                                "Option on: the trial spawner must not spawn");
+                    } finally {
+                        config.setBlockSpawners(before);
+                    }
+                    helper.setBlock(spawnerPos, Blocks.AIR);
+                    BeaconTestSupport.removeBeacon(helper);
+                })
+                .thenSucceed();
+    }
+
+    /** A raid adds its raiders in the area, also when the option of the spawners is on. */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_spawn_raid")
+    public static void raidSpawnsInTheArea(GameTestHelper helper) {
+        BlockPos beacon = activeBeacon(helper);
+        helper.startSequence()
+                .thenWaitUntil(() -> waitUntilActive(helper, beacon))
+                .thenExecute(() -> {
+                    BeaconholdConfig.Server config = BeaconholdConfig.SERVER;
+                    boolean before = config.blockSpawners();
+                    config.setBlockSpawners(true);
+                    try {
+                        ServerLevel level = helper.getLevel();
+                        Vindicator raider = EntityType.VINDICATOR.create(level);
+                        helper.assertTrue(raider != null, "The game must make the raider");
+                        Raid raid = new Raid(1, level, beacon);
+                        raid.joinRaid(1, raider, beacon.offset(3, 0, 3), false);
+                        helper.assertFalse(raider.isSpawnCancelled(), "The raid spawn must not be cancelled");
+                        helper.assertTrue(raider.isAlive() && raider.level() == level, "The raider must be in the level");
+                        raider.discard();
                     } finally {
                         config.setBlockSpawners(before);
                     }

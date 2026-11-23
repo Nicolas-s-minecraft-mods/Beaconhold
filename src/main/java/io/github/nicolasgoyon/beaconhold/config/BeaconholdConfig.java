@@ -75,7 +75,7 @@ public final class BeaconholdConfig {
                     .translation(key("noHostileSpawns"))
                     .push("noHostileSpawns");
             blockSpawners = builder.comment(
-                            "True: the function also stops the spawns of the monster spawners in its area.")
+                            "True: the function also stops the spawns of the monster spawners and of the trial spawners in its area.")
                     .translation(key("blockSpawners"))
                     .define("blockSpawners", false);
             builder.pop();

@@ -12,8 +12,8 @@ public final class SpawnRules {
      * Tells if the function stops a spawn in its area.
      *
      * <p>The function stops only the mobs of the {@code monster} category. It stops the natural spawns and the spawns
-     * at the generation of a chunk. It stops the spawns of a monster spawner only when the option is on. It does not
-     * stop the other spawns, for example the patrols, the raids and the trial spawners.
+     * at the generation of a chunk. It stops the spawns of a monster spawner or of a trial spawner only when the option
+     * is on. It does not stop the other spawns, for example the patrols, the raids and the spawns that a player starts.
      *
      * @param category the category of the mob
      * @param type the cause of the spawn
@@ -26,7 +26,7 @@ public final class SpawnRules {
         }
         return switch (type) {
             case NATURAL, CHUNK_GENERATION -> true;
-            case SPAWNER -> blockSpawners;
+            case SPAWNER, TRIAL_SPAWNER -> blockSpawners;
             default -> false;
         };
     }

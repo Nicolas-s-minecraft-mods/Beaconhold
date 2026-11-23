@@ -26,10 +26,25 @@ class SpawnRulesTest {
         assertTrue(SpawnRules.blocks(MobCategory.MONSTER, MobSpawnType.SPAWNER, true));
     }
 
+    @Test
+    void stopsTheTrialSpawnersOnlyWithTheOption() {
+        assertFalse(SpawnRules.blocks(MobCategory.MONSTER, MobSpawnType.TRIAL_SPAWNER, false));
+        assertTrue(SpawnRules.blocks(MobCategory.MONSTER, MobSpawnType.TRIAL_SPAWNER, true));
+    }
+
     @ParameterizedTest
     @EnumSource(
             value = MobSpawnType.class,
-            names = {"NATURAL", "CHUNK_GENERATION", "SPAWNER"},
+            names = {"EVENT", "PATROL", "SPAWN_EGG", "COMMAND", "DISPENSER", "BUCKET", "TRIGGERED"})
+    void doesNotStopTheRaidsAndTheSpawnsThatAPlayerStarts(MobSpawnType type) {
+        assertFalse(SpawnRules.blocks(MobCategory.MONSTER, type, true), type.name());
+        assertFalse(SpawnRules.blocks(MobCategory.MONSTER, type, false), type.name());
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = MobSpawnType.class,
+            names = {"NATURAL", "CHUNK_GENERATION", "SPAWNER", "TRIAL_SPAWNER"},
             mode = EnumSource.Mode.EXCLUDE)
     void doesNotStopTheOtherSpawnsOfMonsters(MobSpawnType type) {
         assertFalse(SpawnRules.blocks(MobCategory.MONSTER, type, true), type.name());

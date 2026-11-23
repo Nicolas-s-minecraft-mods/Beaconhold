@@ -34,12 +34,12 @@ The mod has the API for other mods, the area of a beacon and the command for the
 - The function stops these spawns:
   - The natural spawns (the dark areas, and the phantoms).
   - The spawns at the generation of a chunk.
-  - The spawns from a monster spawner, only when the server option `blockSpawners` is on. The default value is off.
+  - The spawns from a monster spawner or a trial spawner, only when the server option `blockSpawners` is on. The default value is off.
 - The function does not stop these spawns:
   - The patrols of pillagers.
   - The raids.
-  - The trial spawners.
-  - The spawns from a spawn egg, a command, a dispenser or a structure.
+  - The spawns that a player starts: a spawn egg, a command, a dispenser or a bucket.
+  - The spawns of a structure.
   - The reinforcements of zombies and the summons of a mob (for example the vexes of an evoker).
   - The conversions (for example a villager that becomes a witch) and the warden.
 - The function does not remove the hostile mobs that are already in the area. A hostile mob can walk into the area.
@@ -154,7 +154,7 @@ The server options are in `serverconfig/beaconhold-server.toml` in the world fol
 | Option | Side | Default | Issue |
 |---|---|---|---|
 | `area.radiusLevel1` to `area.radiusLevel4` | server | 20, 47, 73, 100 | #6 |
-| `noHostileSpawns.blockSpawners` | server | off | #4 |
+| `noHostileSpawns.blockSpawners` | server | off | #4, #22 |
 | `loadedChunks.chunksLevel1` to `loadedChunks.chunksLevel4` | server | 1, 5, 9, 13 | #5 |
 | `loadedChunks.maxLoadedChunks` | server | 256 | #5 |
 | `cost.ticksPerItem` | server | 3750 | #7 |
@@ -166,6 +166,6 @@ The server options are in `serverconfig/beaconhold-server.toml` in the world fol
 The owner of the project gives the answers. Until then, the design uses the default values above, and an option keeps each value open.
 
 1. Loaded chunks: are 13 chunks at level 4 correct for "about 15 chunks"? Is a limit for each player necessary, in addition to the limit of the server? A limit for each player needs the beacon to save the player that placed it.
-2. No hostile spawns: do the raids, the trial spawners or the reinforcements of zombies also stop?
+2. No hostile spawns: do the reinforcements of zombies also stop?
 3. Consumable: does a beacon with no function also use the consumable?
 4. Selection: the function screen opens from a button next to the vanilla beacon screen. Is a separate screen correct?
