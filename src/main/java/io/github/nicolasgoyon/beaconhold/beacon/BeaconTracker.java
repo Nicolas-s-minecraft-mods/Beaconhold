@@ -103,7 +103,8 @@ public final class BeaconTracker {
             }
         }
         BeaconRecord after = current
-                .map(function -> new BeaconRecord(pos, pyramidLevel, active, function.location()))
+                .map(function -> new BeaconRecord(
+                        pos, pyramidLevel, active, function.location(), BeaconOwner.get(beacon)))
                 .orElse(null);
         apply(level, data, pos, before, after);
     }

@@ -56,6 +56,9 @@ public final class BeaconholdConfig {
         /** The maximum number of chunks that all the beacons of the server load together. */
         private final ModConfigSpec.IntValue maxLoadedChunks;
 
+        /** The maximum number of chunks that the beacons of one player load together. */
+        private final ModConfigSpec.IntValue maxChunksPerPlayer;
+
         /** The number of ticks for each consumable item of an active function. */
         private final ModConfigSpec.IntValue ticksPerItem;
 
@@ -107,6 +110,12 @@ public final class BeaconholdConfig {
                             + "/beaconhold chunks limit shows and sets this value.")
                     .translation(key("maxLoadedChunks"))
                     .defineInRange("maxLoadedChunks", ChunkRules.DEFAULT_MAX_LOADED_CHUNKS, 0, MAX_LOADED_CHUNKS);
+            maxChunksPerPlayer = builder.comment("The maximum number of chunks that the beacons of one player load "
+                            + "together. The owner of a beacon is the player that placed it. A beacon with no known "
+                            + "owner has only the limit of the server.")
+                    .translation(key("maxChunksPerPlayer"))
+                    .defineInRange(
+                            "maxChunksPerPlayer", ChunkRules.DEFAULT_MAX_CHUNKS_PER_PLAYER, 0, MAX_LOADED_CHUNKS);
             builder.pop();
 
             builder.comment("The cost of the beacon functions.").translation(key("cost")).push("cost");
@@ -178,6 +187,25 @@ public final class BeaconholdConfig {
          */
         public void setMaxLoadedChunks(int value) {
             maxLoadedChunks.set(value);
+        }
+
+        /**
+         * Gives the maximum number of chunks that the beacons of one player load together.
+         *
+         * @return the value of the option {@code loadedChunks.maxChunksPerPlayer}
+         */
+        public int maxChunksPerPlayer() {
+            return maxChunksPerPlayer.getAsInt();
+        }
+
+        /**
+         * Sets the option {@code loadedChunks.maxChunksPerPlayer}. The GameTests use this method. The method does not
+         * save the file.
+         *
+         * @param value the new value
+         */
+        public void setMaxChunksPerPlayer(int value) {
+            maxChunksPerPlayer.set(value);
         }
 
         /**

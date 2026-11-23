@@ -3,14 +3,18 @@ package io.github.nicolasgoyon.beaconhold.function;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconRecord;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ChunkPos;
@@ -137,6 +141,49 @@ class ChunkRulesTest {
         assertFalse(ChunkRules.keepsChunks(new BeaconRecord(pos, 2, false, loadedChunks), loadedChunks));
         assertFalse(ChunkRules.keepsChunks(new BeaconRecord(pos, 2, true, other), loadedChunks));
         assertFalse(ChunkRules.keepsChunks(null, loadedChunks));
+    }
+
+    private static final UUID ALICE = new UUID(1L, 1L);
+    private static final UUID BOB = new UUID(2L, 2L);
+
+    @Test
+    void playerLimitStopsTheBeaconsOfOnePlayer() {
+        assertArrayEquals(
+                new int[] {89, 89, 78, 89},
+                ChunkRules.allocate(new int[] {89, 89, 89, 89}, List.of(ALICE, ALICE, ALICE, BOB), 512, 256));
+        assertArrayEquals(
+                new int[] {89, 0, 89},
+                ChunkRules.allocate(new int[] {89, 89, 89}, List.of(ALICE, ALICE, BOB), 512, 89));
+    }
+
+    @Test
+    void beaconWithNoOwnerHasOnlyTheServerLimit() {
+        List<UUID> owners = new ArrayList<>(Arrays.asList(ALICE, null, null));
+        assertArrayEquals(
+                new int[] {50, 89, 89}, ChunkRules.allocate(new int[] {89, 89, 89}, owners, 512, 50));
+        owners = new ArrayList<>(Arrays.asList(null, null, null));
+        assertArrayEquals(new int[] {89, 89, 22}, ChunkRules.allocate(new int[] {89, 89, 89}, owners, 200, 0));
+    }
+
+    @Test
+    void serverLimitAlsoAppliesToThePlayers() {
+        assertArrayEquals(
+                new int[] {89, 89, 22},
+                ChunkRules.allocate(new int[] {89, 89, 89}, List.of(ALICE, BOB, new UUID(3L, 3L)), 200, 256));
+    }
+
+    @Test
+    void allowedChunksUsesTheLowerLimit() {
+        assertEquals(30, ChunkRules.allowedChunks(89, 0, 512, true, 226, 256));
+        assertEquals(89, ChunkRules.allowedChunks(89, 0, 512, false, 226, 256));
+        assertEquals(10, ChunkRules.allowedChunks(89, 502, 512, true, 0, 256));
+        assertEquals(0, ChunkRules.allowedChunks(89, 0, 512, true, 300, 256));
+    }
+
+    @Test
+    void ownersMustMatchTheBeacons() {
+        assertThrows(
+                IllegalArgumentException.class, () -> ChunkRules.allocate(new int[] {9}, List.of(), 512, 256));
     }
 
     @Test

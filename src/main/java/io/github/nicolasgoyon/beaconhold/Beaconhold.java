@@ -2,6 +2,7 @@ package io.github.nicolasgoyon.beaconhold;
 
 import com.mojang.logging.LogUtils;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
+import io.github.nicolasgoyon.beaconhold.beacon.BeaconOwner;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
 import io.github.nicolasgoyon.beaconhold.command.BeaconholdCommand;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
@@ -34,6 +35,7 @@ public final class Beaconhold {
         ModRegistries.register(modEventBus);
         ModFunctions.register(modEventBus);
         BeaconTracker.register();
+        BeaconOwner.register();
         BeaconholdCommand.register();
         NoHostileSpawns.register();
         LoadedChunks.register(modEventBus);

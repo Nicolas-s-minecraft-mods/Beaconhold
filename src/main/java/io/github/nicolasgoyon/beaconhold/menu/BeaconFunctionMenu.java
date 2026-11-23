@@ -13,6 +13,7 @@ import io.github.nicolasgoyon.beaconhold.cost.StockContainer;
 import io.github.nicolasgoyon.beaconhold.function.LoadedChunks;
 import io.github.nicolasgoyon.beaconhold.function.ModFunctions;
 import java.util.List;
+import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -36,7 +37,7 @@ import net.minecraft.world.level.block.entity.BeaconBlockEntity;
  * function of the beacon, its state and the cost. The player puts the stock of the consumable in the slot of the menu.
  *
  * <p>The buttons of the screen send their id to the server (see {@link FunctionButtons}). The server sets the function
- * of the beacon. The data slots give the function, the state, the fuel and the loaded chunks to the client.
+ * of the beacon. The data slots give the function, the state, the fuel, the loaded chunks and the use of the owner to the client.
  */
 public final class BeaconFunctionMenu extends AbstractContainerMenu {
     /** The data slot of the index of the function in the sorted list, or -1 for no function. */
@@ -67,8 +68,21 @@ public final class BeaconFunctionMenu extends AbstractContainerMenu {
     /** The data slot of the power state: 1 when the beacon is off because it has no consumable, else 0. */
     public static final int DATA_OFF = 9;
 
+    /** The data slots of the number of chunks that the beacons of the owner load (see {@link DataValues}). */
+    public static final int DATA_OWNER_CHUNKS_LOW = 10;
+
+    public static final int DATA_OWNER_CHUNKS_HIGH = 11;
+
+    /** The data slots of the limit for each player (see {@link DataValues}). */
+    public static final int DATA_PLAYER_LIMIT_LOW = 12;
+
+    public static final int DATA_PLAYER_LIMIT_HIGH = 13;
+
+    /** The data slot of the owner: 1 when the beacon has a known owner, else 0. */
+    public static final int DATA_HAS_OWNER = 14;
+
     /** The number of data slots. */
-    public static final int DATA_COUNT = 10;
+    public static final int DATA_COUNT = 15;
 
     /** The index of the slot of the stock. */
     public static final int STOCK_SLOT = 0;
@@ -81,7 +95,7 @@ public final class BeaconFunctionMenu extends AbstractContainerMenu {
     /** The position of the inventory of the player in the screen. */
     public static final int INVENTORY_X = 8;
 
-    public static final int INVENTORY_Y = 158;
+    public static final int INVENTORY_Y = 168;
 
     /** The number of slots of the inventory of the player. */
     private static final int INVENTORY_SLOTS = 36;
@@ -169,6 +183,11 @@ public final class BeaconFunctionMenu extends AbstractContainerMenu {
                                     && BeaconPower.isOffWithNoConsumable(beacon)
                             ? 1
                             : 0;
+                    case DATA_OWNER_CHUNKS_LOW -> DataValues.low(ownerChunks(level, pos));
+                    case DATA_OWNER_CHUNKS_HIGH -> DataValues.high(ownerChunks(level, pos));
+                    case DATA_PLAYER_LIMIT_LOW -> DataValues.low(BeaconholdConfig.SERVER.maxChunksPerPlayer());
+                    case DATA_PLAYER_LIMIT_HIGH -> DataValues.high(BeaconholdConfig.SERVER.maxChunksPerPlayer());
+                    case DATA_HAS_OWNER -> LoadedChunks.ownerOf(level, pos) != null ? 1 : 0;
                     default -> 0;
                 };
             }
@@ -276,6 +295,33 @@ public final class BeaconFunctionMenu extends AbstractContainerMenu {
     }
 
     /**
+     * Tells if the beacon has a known owner: the player that placed it.
+     *
+     * @return true if the beacon has a known owner
+     */
+    public boolean hasOwner() {
+        return data.get(DATA_HAS_OWNER) == 1;
+    }
+
+    /**
+     * Gives the number of chunks that all the beacons of the owner of the beacon load.
+     *
+     * @return the number of chunks, or 0 when the beacon has no known owner
+     */
+    public int ownerChunks() {
+        return DataValues.join(data.get(DATA_OWNER_CHUNKS_LOW), data.get(DATA_OWNER_CHUNKS_HIGH));
+    }
+
+    /**
+     * Gives the limit for each player.
+     *
+     * @return the value of the server option {@code loadedChunks.maxChunksPerPlayer}
+     */
+    public int playerLimit() {
+        return DataValues.join(data.get(DATA_PLAYER_LIMIT_LOW), data.get(DATA_PLAYER_LIMIT_HIGH));
+    }
+
+    /**
      * Gives the time of operation in the stock and in the fuel of the beacon.
      *
      * @return the time in ticks
@@ -291,6 +337,11 @@ public final class BeaconFunctionMenu extends AbstractContainerMenu {
      */
     public int ticksPerItem() {
         return ticksPerItem;
+    }
+
+    private static int ownerChunks(ServerLevel level, BlockPos pos) {
+        UUID owner = LoadedChunks.ownerOf(level, pos);
+        return owner == null ? 0 : LoadedChunks.ownerChunks(level, owner);
     }
 
     @Override

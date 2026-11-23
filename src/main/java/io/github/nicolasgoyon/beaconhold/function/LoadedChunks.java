@@ -3,6 +3,7 @@ package io.github.nicolasgoyon.beaconhold.function;
 import io.github.nicolasgoyon.beaconhold.api.ActiveBeacon;
 import io.github.nicolasgoyon.beaconhold.api.BeaconFunctionEvent;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
+import io.github.nicolasgoyon.beaconhold.beacon.BeaconRecord;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconSavedData;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import it.unimi.dsi.fastutil.longs.LongIterator;
@@ -12,6 +13,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -118,7 +122,14 @@ public final class LoadedChunks {
         BeaconholdConfig.Server config = BeaconholdConfig.SERVER;
         List<ChunkPos> wanted = ChunkRules.areaChunks(
                 beacon.pos().getX(), beacon.pos().getZ(), beacon.area().radius());
-        int allowed = ChunkRules.allowedChunks(wanted.size(), totalLoadedChunks(level), config.maxLoadedChunks());
+        UUID owner = ownerOf(level, beacon.pos());
+        int allowed = ChunkRules.allowedChunks(
+                wanted.size(),
+                totalLoadedChunks(level),
+                config.maxLoadedChunks(),
+                owner != null,
+                owner == null ? 0 : ownerChunks(level, owner),
+                config.maxChunksPerPlayer());
         LongSet chunks = new LongOpenHashSet();
         for (ChunkPos chunk : wanted.subList(0, allowed)) {
             CONTROLLER.forceChunk(level, beacon.pos(), chunk.x, chunk.z, true, true);
@@ -153,11 +164,15 @@ public final class LoadedChunks {
      * chunks. A beacon with no saved chunks comes after the beacons with saved chunks. The method changes only the
      * tickets of the chunks that a beacon gets or releases.
      *
+     * <p>A beacon with a known owner also has the limit for each player. A beacon with no known owner has only the
+     * limit of the server.
+     *
      * @param server the server
      */
     public static void rebalance(MinecraftServer server) {
         List<ServerLevel> levels = new ArrayList<>();
         List<ActiveBeacon> beacons = new ArrayList<>();
+        List<UUID> owners = new ArrayList<>();
         List<List<ChunkPos>> areas = new ArrayList<>();
         for (ServerLevel level : server.getAllLevels()) {
             LoadedChunksSavedData data = LoadedChunksSavedData.get(level);
@@ -180,6 +195,7 @@ public final class LoadedChunks {
             for (ActiveBeacon beacon : ordered) {
                 levels.add(level);
                 beacons.add(beacon);
+                owners.add(ownerOf(level, beacon.pos()));
                 areas.add(ChunkRules.areaChunks(
                         beacon.pos().getX(), beacon.pos().getZ(), beacon.area().radius()));
             }
@@ -188,7 +204,11 @@ public final class LoadedChunks {
         for (int i = 0; i < wanted.length; i++) {
             wanted[i] = areas.get(i).size();
         }
-        int[] allowed = ChunkRules.allocate(wanted, BeaconholdConfig.SERVER.maxLoadedChunks());
+        int[] allowed = ChunkRules.allocate(
+                wanted,
+                owners,
+                BeaconholdConfig.SERVER.maxLoadedChunks(),
+                BeaconholdConfig.SERVER.maxChunksPerPlayer());
         for (int i = 0; i < allowed.length; i++) {
             LongSet chunks = new LongOpenHashSet();
             for (ChunkPos chunk : areas.get(i).subList(0, allowed[i])) {
@@ -229,6 +249,40 @@ public final class LoadedChunks {
         int total = 0;
         for (ServerLevel dimension : level.getServer().getAllLevels()) {
             total += LoadedChunksSavedData.get(dimension).total();
+        }
+        return total;
+    }
+
+    /**
+     * Gives the owner of a beacon from the saved list of the beacons.
+     *
+     * @param level the dimension
+     * @param pos the position of the beacon
+     * @return the UUID of the player that placed the beacon, or {@code null} if no player is known
+     */
+    @Nullable
+    public static UUID ownerOf(ServerLevel level, BlockPos pos) {
+        BeaconRecord beacon = BeaconSavedData.get(level).get(pos);
+        return beacon == null ? null : beacon.owner();
+    }
+
+    /**
+     * Gives the number of chunks that all the beacons of a player load.
+     *
+     * @param level a dimension of the server
+     * @param owner the UUID of the player
+     * @return the sum for all the dimensions
+     */
+    public static int ownerChunks(ServerLevel level, UUID owner) {
+        int total = 0;
+        for (ServerLevel dimension : level.getServer().getAllLevels()) {
+            LoadedChunksSavedData data = LoadedChunksSavedData.get(dimension);
+            for (BlockPos pos : data.positions()) {
+                LongSet chunks = data.get(pos);
+                if (chunks != null && Objects.equals(owner, ownerOf(dimension, pos))) {
+                    total += chunks.size();
+                }
+            }
         }
         return total;
     }
