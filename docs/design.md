@@ -95,7 +95,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
 - Server options set the four radii.
 - The vanilla powers of the beacon (Speed, Haste, Resistance, Jump Boost, Strength, Regeneration) apply to the players in the area. The area replaces the vanilla range (a box of 20 to 50 blocks around the beacon). A spectator gets no power.
 - The server option `area.vanillaPowersUseArea` turns this rule off. Then the vanilla powers use the vanilla range.
-- Each vanilla power of a beacon that is on has a bonus to its level. The server option `vanillaPowers.levelBonus` sets the bonus. The default value is 1: Speed I becomes Speed II, and Speed II becomes Speed III.
+- Each vanilla power of a beacon that is on has a bonus to its level, Regeneration included. The server option `vanillaPowers.levelBonus` sets the bonus. The default value is 1: Speed I becomes Speed II, and Speed II becomes Speed III.
 - The bonus is the exchange for the cost. With the server option `cost.consumableRequired` off, the vanilla powers get no bonus.
 - A beacon that is off gives no vanilla power.
 - The area of a function of another mod uses the same rules. The other mod can use its own area in its own code.
@@ -219,10 +219,9 @@ A change of the server options applies at once to the active beacons. The server
 
 The owner of the project gives the answers. Until then, the design uses the default values above, and an option keeps each value open.
 
-1. Loaded chunks: is 512 a good default for the limit of the server? With the default radii, 512 chunks are enough for 5 beacons at the pyramid level 4. Is a limit for each player necessary, in addition to the limit of the server? A limit for each player needs the beacon to save the player that placed it.
-2. No hostile spawns: do the reinforcements of zombies also stop?
-3. Selection: the function screen opens from a button next to the vanilla beacon screen. Is a separate screen correct?
-4. Dome: a function of another mod can hide its area (`showsArea(false)`). Does a beacon with such a function and an active beam show the dome? The code shows no dome.
-5. Dome: with the option `area.vanillaPowersUseArea` off, does a beacon with no function show the dome? The code shows no dome.
-6. Vanilla powers: does the level bonus also apply to Regeneration? The code applies it to all the powers.
-7. Beam: does the beam also go off with no stock? The code hides it.
+1. Loaded chunks: a beacon with no known owner has only the limit of the server. Is this rule correct, or does such a beacon load no chunk (#19)?
+2. Loaded chunks: is 256 a good default for the limit for each player? With the default radii, 256 chunks are enough for 2 beacons at the pyramid level 4 (#19).
+3. No hostile spawns: do the reinforcements of zombies also stop?
+4. Selection: the function screen opens from a button next to the vanilla beacon screen. Is a separate screen correct?
+5. Dome: a function of another mod can hide its area (`showsArea(false)`). Does a beacon with such a function and an active beam show the dome? The code shows no dome.
+6. Dome: with the option `area.vanillaPowersUseArea` off, does a beacon with no function show the dome? The code shows no dome.
