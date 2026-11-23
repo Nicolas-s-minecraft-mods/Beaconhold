@@ -113,6 +113,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
 - A beacon uses its consumable only when it has a function, a pyramid and a free beam. A beacon in a chunk that is not loaded uses no consumable.
 - With no fuel and no stock, the function stops. The beacon keeps its function and its vanilla powers. A new stock starts the function again.
 - The function screen shows the time that the stock and the fuel give, in game days. With less than one game day, the screen shows the text in red, and the beacon makes smoke at each update.
+- The beacon saves its stock, its fuel and the time of the last use of the fuel. They stay after a restart of the server.
 - A beacon that a player or an explosion removes drops its stock. The fuel of the last item is lost.
 
 ## Saved data and updates
@@ -120,6 +121,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
 - Each dimension of the server saves a list of the beacons that have a function. For each beacon, the list keeps the position, the pyramid level, the function and the state (active or not).
 - The beacon updates its entry each 80 ticks (4 seconds), at the same time as the vanilla powers.
 - A beacon in a chunk that is not loaded keeps its last state. The queries use the saved list, so they do not load chunks.
+- The game does not save the pyramid level and the beam. After a load of its chunk, a beacon scans its beam again, then calculates its pyramid level at the next update. Until then, an active beacon keeps its saved state and uses no consumable. A change of the function applies at once.
 - When a loaded chunk has no beacon at the position of an entry, the server removes the entry.
 
 ## API
