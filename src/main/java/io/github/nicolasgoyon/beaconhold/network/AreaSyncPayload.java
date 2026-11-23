@@ -10,8 +10,8 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * The areas that the client shows as energy domes: the active beacons of the dimension of the player, with a function
- * that shows its area. The server sends the full list each time that the list changes.
+ * The areas that the client shows as energy domes: the active beacons near the player, with a function that shows its
+ * area. The server sends the full list each time that the list changes.
  *
  * @param areas the areas
  */

@@ -5,6 +5,7 @@ import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
 import io.github.nicolasgoyon.beaconhold.function.ModFunctions;
 import io.github.nicolasgoyon.beaconhold.network.AreaSync;
 import io.github.nicolasgoyon.beaconhold.network.AreaSyncPayload;
+import io.github.nicolasgoyon.beaconhold.network.AreaVisibility;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -68,6 +69,31 @@ public final class DomeGameTests {
                     BeaconholdApi.setFunction(level, beacon, TestFunctions.NO_AREA);
                     helper.assertTrue(AreaSync.isChanged(level), "A new function must mark the dimension");
                     helper.assertFalse(hasAnyArea(level, beacon), "A function with no area: no dome");
+                    BeaconTestSupport.removeBeacon(helper);
+                })
+                .thenSucceed();
+    }
+
+    /** The server sends an area only to the players near its edge. */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_dome_near")
+    public static void areaGoesOnlyToNearPlayers(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos beacon = BeaconTestSupport.buildBeacon(helper, 1);
+        BeaconholdApi.setFunction(level, beacon, ModFunctions.NO_HOSTILE_SPAWNS.getKey());
+        AreaSyncPayload.Area area = new AreaSyncPayload.Area(beacon, 20);
+        double x = beacon.getX() + 0.5;
+        double z = beacon.getZ() + 0.5;
+        double limit = 20 + AreaVisibility.SEND_DISTANCE;
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(hasArea(level, beacon, 20), "The beacon must be active"))
+                .thenExecute(() -> {
+                    helper.assertTrue(AreaSync.areasNear(level, x, z).contains(area), "A player at the beacon");
+                    helper.assertTrue(
+                            AreaSync.areasNear(level, x + limit - 1, z).contains(area), "A player near the limit");
+                    helper.assertFalse(
+                            AreaSync.areasNear(level, x + limit + 1, z).contains(area), "A player out of the limit");
+                    helper.assertFalse(
+                            AreaSync.areasNear(level, x, z - limit - 1).contains(area), "A player out of the limit");
                     BeaconTestSupport.removeBeacon(helper);
                 })
                 .thenSucceed();
