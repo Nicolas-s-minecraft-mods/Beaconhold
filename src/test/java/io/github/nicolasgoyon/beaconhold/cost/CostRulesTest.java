@@ -37,4 +37,21 @@ class CostRulesTest {
         assertEquals(80, CostRules.MIN_TICKS_PER_ITEM);
         assertEquals(24_000, CostRules.MAX_TICKS_PER_ITEM);
     }
+
+    @Test
+    void comparatorSignalFollowsTheLevelOfTheStock() {
+        assertEquals(0, CostRules.comparatorSignal(0, 64));
+        assertEquals(1, CostRules.comparatorSignal(1, 64));
+        assertEquals(8, CostRules.comparatorSignal(32, 64));
+        assertEquals(14, CostRules.comparatorSignal(63, 64));
+        assertEquals(15, CostRules.comparatorSignal(64, 64));
+    }
+
+    @Test
+    void comparatorSignalStaysInItsRange() {
+        assertEquals(15, CostRules.comparatorSignal(100, 64));
+        assertEquals(0, CostRules.comparatorSignal(-3, 64));
+        assertEquals(0, CostRules.comparatorSignal(5, 0));
+        assertEquals(15, CostRules.comparatorSignal(16, 16));
+    }
 }

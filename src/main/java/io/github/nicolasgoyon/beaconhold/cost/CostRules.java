@@ -84,4 +84,20 @@ public final class CostRules {
         }
         return String.format(Locale.ROOT, "%d.%d", tenths / 10, tenths % 10);
     }
+
+    /**
+     * Gives the signal of a comparator next to a beacon, from the level of the stock. The formula is the formula of a
+     * container with one slot.
+     *
+     * @param count the number of items in the stock
+     * @param maxStackSize the maximum stack size of the item
+     * @return 0 for an empty stock, 1 to 14 for a partial stock, 15 for a full stack
+     */
+    public static int comparatorSignal(int count, int maxStackSize) {
+        if (count <= 0 || maxStackSize <= 0) {
+            return 0;
+        }
+        int clamped = Math.min(count, maxStackSize);
+        return Math.min(15, clamped * 14 / maxStackSize + 1);
+    }
 }
