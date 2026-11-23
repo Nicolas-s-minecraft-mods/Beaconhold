@@ -30,4 +30,18 @@ class PowerRulesTest {
         assertEquals(1, PowerRules.amplifier(1, -3));
         assertEquals(1, PowerRules.amplifier(0, PowerRules.DEFAULT_LEVEL_BONUS));
     }
+
+    @Test
+    void withTheConsumableRequiredTheBeaconNeedsFuel() {
+        assertTrue(PowerRules.isOn(true, true, true));
+        assertFalse(PowerRules.isOn(true, true, false));
+        assertFalse(PowerRules.isOn(true, false, true));
+    }
+
+    @Test
+    void withNoConsumableRequiredTheVanillaRuleApplies() {
+        assertTrue(PowerRules.isOn(false, true, false));
+        assertTrue(PowerRules.isOn(false, true, true));
+        assertFalse(PowerRules.isOn(false, false, false));
+    }
 }

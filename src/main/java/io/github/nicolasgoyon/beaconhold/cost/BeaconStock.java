@@ -1,5 +1,6 @@
 package io.github.nicolasgoyon.beaconhold.cost;
 
+import io.github.nicolasgoyon.beaconhold.beacon.PowerRules;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import io.github.nicolasgoyon.beaconhold.registry.ModRegistries;
 import net.minecraft.core.BlockPos;
@@ -74,10 +75,16 @@ public final class BeaconStock {
      * @param wasActive true if the beacon was on after the last update
      * @param canOperate true if the beacon has a pyramid and a free beam
      * @param periodic true for the update at the interval of the vanilla powers. Only this update gives the sign.
-     * @return true if the beacon is on: it can operate and it has fuel
+     * @return true if the beacon is on: it can operate, and it has fuel or the server option
+     *     {@code cost.consumableRequired} is off
      */
     public static boolean operate(
             ServerLevel level, BeaconBlockEntity beacon, boolean wasActive, boolean canOperate, boolean periodic) {
+        if (!BeaconholdConfig.SERVER.consumableRequired()) {
+            // The vanilla rule: the beacon needs no consumable, and it keeps its stock and its fuel.
+            beacon.setData(ModRegistries.BEACON_FUEL_TICK, level.getGameTime());
+            return PowerRules.isOn(false, canOperate, false);
+        }
         ItemStack stock = stock(beacon);
         int usable = usableCount(stock);
         int fuel = fuel(beacon);

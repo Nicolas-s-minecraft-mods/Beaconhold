@@ -127,6 +127,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
 - With no fuel and no stock, the beacon is off. The beacon keeps its function. A new stock turns the beacon on again at its next update.
 - A beacon that has no update yet is off. Thus a beacon in a world that has no stock is off until a player gives it the consumable.
 - The clients get the power state of each beacon, and they hide the beam of a beacon that is off.
+- The server option `cost.consumableRequired` turns the consumable off. Then the vanilla rule applies: a beacon with a pyramid and a free beam is on. The beacon keeps its stock and its fuel. A change of the option applies at the next update of each beacon.
 - The function screen shows the time that the stock and the fuel give, in game days. With less than one game day, the screen shows the text in red, and the beacon makes smoke at each update.
 - The beacon saves its stock, its fuel and the time of the last use of the fuel. They stay after a restart of the server.
 - A beacon that a player or an explosion removes drops its stock. The fuel of the last item is lost.
@@ -194,6 +195,7 @@ A change of the server options applies at once to the active beacons. The server
 | `noHostileSpawns.blockSpawners` | server | off | #4, #22 |
 | `loadedChunks.maxLoadedChunks` | server | 512 | #5, #23 |
 | `cost.ticksPerItem` | server | 3750 | #7 |
+| `cost.consumableRequired` | server | on | #34 |
 | `beaconhold:beacon_consumables` | item tag (data) | amethyst shard, prismarine crystals, nether quartz | #8 |
 | `dome.enabled` | client | on | #9 |
 

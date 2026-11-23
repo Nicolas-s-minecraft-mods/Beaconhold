@@ -23,6 +23,18 @@ public final class PowerRules {
     }
 
     /**
+     * Tells if a beacon is on after an update.
+     *
+     * @param consumableRequired the value of the server option {@code cost.consumableRequired}
+     * @param canOperate true if the beacon has a pyramid and a free beam
+     * @param hasFuel true if the beacon has fuel after the update
+     * @return true if the beacon can operate, and has fuel or needs no consumable
+     */
+    public static boolean isOn(boolean consumableRequired, boolean canOperate, boolean hasFuel) {
+        return canOperate && (hasFuel || !consumableRequired);
+    }
+
+    /**
      * Gives the amplifier of a vanilla power with the bonus.
      *
      * @param vanillaAmplifier the amplifier that the vanilla beacon gives: 0 for level I, 1 for level II

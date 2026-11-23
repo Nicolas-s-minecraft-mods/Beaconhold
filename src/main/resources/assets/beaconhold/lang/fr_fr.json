@@ -5,6 +5,8 @@
   "beaconhold.configuration.area.tooltip": "La zone d'une balise : un cylindre vertical autour de la balise. Les fonctions et les pouvoirs vanilla de la balise utilisent cette zone.",
   "beaconhold.configuration.blockSpawners": "Bloquer les générateurs",
   "beaconhold.configuration.blockSpawners.tooltip": "Activé : la fonction bloque aussi les apparitions des générateurs de monstres et des générateurs d'épreuve dans sa zone. Les patrouilles, les raids et les apparitions lancées par un joueur ne sont pas bloqués.",
+  "beaconhold.configuration.consumableRequired": "Consommable obligatoire",
+  "beaconhold.configuration.consumableRequired.tooltip": "Activé : une balise a besoin du consommable pour être allumée. Désactivé : la règle vanilla. Une balise avec une pyramide et un faisceau libre est allumée, et elle garde son stock.",
   "beaconhold.configuration.cost": "Coût",
   "beaconhold.configuration.cost.tooltip": "Le coût des fonctions de la balise.",
   "beaconhold.configuration.dome": "Dôme d'énergie",
