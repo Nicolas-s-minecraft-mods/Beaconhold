@@ -11,7 +11,7 @@
 
 1. Open an issue, or select an existing issue.
 2. Create a branch from `develop`. Use the format `<type>/<issue>-<short-name>`, for example `feat/4-no-hostile-spawns`. Types: `feat`, `fix`, `docs`, `build`, `ci`, `refactor`, `test`, `chore`.
-3. Make small commits. Use [Conventional Commits](https://www.conventionalcommits.org/), for example `feat(spawn): stop the hostile spawns near a beacon`. In a pull request with one commit, put the bump marker in the title of the commit too. GitHub can use this title for the squash. Scopes: `spawn`, `chunks`, `screen`, `api`, `ci`, `docs`.
+3. Make small commits. Use [Conventional Commits](https://www.conventionalcommits.org/), for example `feat(spawn): stop the hostile spawns near a beacon`. In a pull request with one commit, put the bump marker in the title of the commit too. GitHub can use this title for the squash. Scopes: `spawn`, `chunks`, `dome`, `screen`, `cost`, `api`, `ci`, `docs`.
 4. Open a pull request to `develop`. Write `Closes #<issue>` in the description. The title follows Conventional Commits and ends with a bump marker (see [Versions and releases](#versions-and-releases)), for example `feat(spawn): stop the hostile spawns near a beacon [minor]`.
 5. The CI must pass before the merge. The check **Title and version** refuses a title with no bump marker, and its summary gives the version after the merge.
 6. Use "Squash and merge": the title of the pull request becomes the title of the commit on `develop`. Delete the branch after the merge.

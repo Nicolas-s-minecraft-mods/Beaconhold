@@ -7,6 +7,7 @@ import io.github.nicolasgoyon.beaconhold.api.BeaconFunctionEvent;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import io.github.nicolasgoyon.beaconhold.mixin.BeaconBlockEntityAccessor;
+import io.github.nicolasgoyon.beaconhold.network.AreaSync;
 import io.github.nicolasgoyon.beaconhold.registry.ModRegistries;
 import java.util.ArrayList;
 import java.util.List;
@@ -101,6 +102,9 @@ public final class BeaconTracker {
         }
         if (transition.start() != null) {
             NeoForge.EVENT_BUS.post(new BeaconFunctionEvent.Start(level, toActiveBeacon(transition.start())));
+        }
+        if (transition.stop() != null || transition.start() != null) {
+            AreaSync.markChanged(level);
         }
     }
 
