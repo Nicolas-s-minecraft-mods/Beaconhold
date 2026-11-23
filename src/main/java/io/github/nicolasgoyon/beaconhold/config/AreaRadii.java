@@ -1,9 +1,12 @@
 package io.github.nicolasgoyon.beaconhold.config;
 
-/** The rule that gives the radius of the area of a beacon from its pyramid level. */
+/**
+ * The rule that gives the radius of the area of a beacon from its pyramid level. The functions and the vanilla powers of
+ * the beacon use this area.
+ */
 public final class AreaRadii {
     /** The default radii in blocks, for the pyramid levels 1 to 4. */
-    static final int[] DEFAULT_RADII = {20, 47, 73, 100};
+    static final int[] DEFAULT_RADII = {20, 38, 57, 75};
 
     /** The maximum radius in blocks that the options accept. */
     static final int MAX_RADIUS = 512;

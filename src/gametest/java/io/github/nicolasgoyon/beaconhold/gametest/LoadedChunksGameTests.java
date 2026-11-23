@@ -55,13 +55,13 @@ public final class LoadedChunksGameTests {
 
     /**
      * Checks that a beacon loads the chunks that its area touches. A beacon at the level 1 loads 9 to 13 chunks, and a
-     * beacon at the level 2 loads 36 to 41 chunks.
+     * beacon at the level 2 loads 25 to 32 chunks.
      */
     private static void assertAreaChunks(GameTestHelper helper, BlockPos beacon, int pyramidLevel) {
         int radius = BeaconholdConfig.SERVER.radius(pyramidLevel);
         List<ChunkPos> area = ChunkRules.areaChunks(beacon.getX(), beacon.getZ(), radius);
-        int min = pyramidLevel == 1 ? 9 : 36;
-        int max = pyramidLevel == 1 ? 13 : 41;
+        int min = pyramidLevel == 1 ? 9 : 25;
+        int max = pyramidLevel == 1 ? 13 : 32;
         helper.assertTrue(
                 area.size() >= min && area.size() <= max, "The area touches " + area.size() + " chunks");
         assertChunks(helper, beacon, area.size());

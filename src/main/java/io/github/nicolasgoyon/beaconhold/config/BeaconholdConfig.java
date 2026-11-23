@@ -42,6 +42,9 @@ public final class BeaconholdConfig {
         /** The radius of the area in blocks, for the pyramid levels 1 to 4. */
         private final ModConfigSpec.IntValue[] radii;
 
+        /** True if the vanilla powers of a beacon use the area of the beacon. */
+        private final ModConfigSpec.BooleanValue vanillaPowersUseArea;
+
         /** True if the function "no hostile spawns" also stops the monster spawners. */
         private final ModConfigSpec.BooleanValue blockSpawners;
 
@@ -52,7 +55,8 @@ public final class BeaconholdConfig {
         private final ModConfigSpec.IntValue ticksPerItem;
 
         Server(ModConfigSpec.Builder builder) {
-            builder.comment("The area of the beacon functions: a vertical cylinder around the beacon.")
+            builder.comment("The area of a beacon: a vertical cylinder around the beacon. The functions and the vanilla "
+                            + "powers of the beacon use this area.")
                     .translation(key("area"))
                     .push("area");
             int[] defaults = AreaRadii.DEFAULT_RADII;
@@ -63,6 +67,10 @@ public final class BeaconholdConfig {
                         .translation(key(name))
                         .defineInRange(name, defaults[i], 1, AreaRadii.MAX_RADIUS);
             }
+            vanillaPowersUseArea = builder.comment("True: the vanilla powers of a beacon (Speed, Haste and the others) "
+                            + "use the area of the beacon. False: the vanilla powers use the vanilla range.")
+                    .translation(key("vanillaPowersUseArea"))
+                    .define("vanillaPowersUseArea", true);
             builder.pop();
 
             builder.comment("The function \"no hostile spawns\".")
@@ -131,6 +139,24 @@ public final class BeaconholdConfig {
          */
         public void setMaxLoadedChunks(int value) {
             maxLoadedChunks.set(value);
+        }
+
+        /**
+         * Tells if the vanilla powers of a beacon use the area of the beacon.
+         *
+         * @return the value of the option {@code area.vanillaPowersUseArea}
+         */
+        public boolean vanillaPowersUseArea() {
+            return vanillaPowersUseArea.getAsBoolean();
+        }
+
+        /**
+         * Sets the option {@code area.vanillaPowersUseArea}. The GameTests use this method.
+         *
+         * @param value the new value
+         */
+        public void setVanillaPowersUseArea(boolean value) {
+            vanillaPowersUseArea.set(value);
         }
 
         /**

@@ -19,11 +19,11 @@ import org.junit.jupiter.api.Test;
 class ChunkRulesTest {
     private static final ChunkPos CENTER = new ChunkPos(10, -4);
 
-    /** The radii of the area for the pyramid levels 1 to 4. */
-    private static final int[] RADII = {20, 47, 73, 100};
+    /** The default radii of the area for the pyramid levels 1 to 4. */
+    private static final int[] RADII = {20, 38, 57, 75};
 
     /** The smallest and the largest numbers of chunks for each pyramid level, for all the positions in a chunk. */
-    private static final int[][] COUNTS = {{9, 13}, {36, 41}, {81, 88}, {144, 151}};
+    private static final int[][] COUNTS = {{9, 13}, {25, 32}, {52, 56}, {85, 91}};
 
     @Test
     void chunkCountsForEachPyramidLevel() {
@@ -45,13 +45,16 @@ class ChunkRulesTest {
     @Test
     void beaconInTheCenterOfAChunk() {
         assertEquals(9, ChunkRules.areaChunks(8, 8, 20).size());
+        assertEquals(25, ChunkRules.areaChunks(8, 8, 38).size());
+        assertEquals(54, ChunkRules.areaChunks(8, 8, 57).size());
+        assertEquals(89, ChunkRules.areaChunks(8, 8, 75).size());
         assertEquals(145, ChunkRules.areaChunks(8, 8, 100).size());
     }
 
     @Test
-    void defaultLimitHoldsThreeBeaconsOfLevel4() {
-        assertTrue(ChunkRules.DEFAULT_MAX_LOADED_CHUNKS >= 3 * COUNTS[3][1]);
-        assertTrue(ChunkRules.DEFAULT_MAX_LOADED_CHUNKS < 4 * COUNTS[3][0]);
+    void defaultLimitHoldsFiveBeaconsOfLevel4() {
+        assertTrue(ChunkRules.DEFAULT_MAX_LOADED_CHUNKS >= 5 * COUNTS[3][1]);
+        assertTrue(ChunkRules.DEFAULT_MAX_LOADED_CHUNKS < 6 * COUNTS[3][1]);
     }
 
     @Test

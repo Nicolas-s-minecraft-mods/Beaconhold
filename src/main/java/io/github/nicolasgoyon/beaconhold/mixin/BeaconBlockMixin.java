@@ -1,7 +1,9 @@
 package io.github.nicolasgoyon.beaconhold.mixin;
 
+import io.github.nicolasgoyon.beaconhold.beacon.BeamBeacons;
 import io.github.nicolasgoyon.beaconhold.cost.BeaconStock;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.BeaconBlock;
@@ -22,6 +24,9 @@ public abstract class BeaconBlockMixin extends BaseEntityBlock {
                 && !state.is(newState.getBlock())
                 && level.getBlockEntity(pos) instanceof BeaconBlockEntity beacon) {
             BeaconStock.drop(level, beacon);
+        }
+        if (level instanceof ServerLevel serverLevel && !state.is(newState.getBlock())) {
+            BeamBeacons.remove(serverLevel, pos);
         }
         super.onRemove(state, level, pos, newState, movedByPiston);
     }

@@ -15,7 +15,7 @@ import net.minecraft.world.level.ChunkPos;
 public final class ChunkRules {
     /**
      * The default maximum number of chunks that all the beacons of the server load together. A beacon with the pyramid
-     * level 4 loads 144 to 151 chunks, so this value is enough for 3 such beacons.
+     * level 4 and the default radius loads 85 to 91 chunks, so this value is enough for 5 such beacons.
      */
     public static final int DEFAULT_MAX_LOADED_CHUNKS = 512;
 

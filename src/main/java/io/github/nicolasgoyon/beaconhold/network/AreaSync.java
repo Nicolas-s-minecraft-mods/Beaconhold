@@ -3,13 +3,20 @@ package io.github.nicolasgoyon.beaconhold.network;
 import io.github.nicolasgoyon.beaconhold.api.ActiveBeacon;
 import io.github.nicolasgoyon.beaconhold.api.BeaconFunction;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
+import io.github.nicolasgoyon.beaconhold.beacon.BeamBeacons;
+import io.github.nicolasgoyon.beaconhold.beacon.DomeRules;
+import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import io.github.nicolasgoyon.beaconhold.registry.ModRegistries;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -22,8 +29,8 @@ import net.neoforged.neoforge.network.PacketDistributor;
  * Sends the areas of the active beacons to the players, so that the clients show the energy domes.
  *
  * <p>The server sends to each player only the areas whose edge is near the player (see {@link AreaVisibility}). Each
- * {@link AreaVisibility#CHECK_INTERVAL} ticks, and at the end of a tick with a change of an active function, the
- * server calculates the areas near each player of the dimension. It sends the list only when the list changes. A
+ * {@link AreaVisibility#CHECK_INTERVAL} ticks, the server calculates the areas near each player of the dimension. It
+ * also calculates them at the end of a tick with a change of an area. It sends the list only when the list changes. A
  * player also gets the areas when the player joins, enters a dimension or respawns.
  */
 public final class AreaSync {
@@ -101,20 +108,30 @@ public final class AreaSync {
     }
 
     /**
-     * Gives the areas that the clients show in a dimension: the active beacons with a function that shows its area.
+     * Gives the areas that the clients show in a dimension. The list contains the active beacons with a function that
+     * shows its area, then the loaded beacons with an active beam that show the dome (see {@link DomeRules}). Each
+     * beacon is in the list one time.
      *
      * @param level the dimension
      * @return all the areas of the dimension
      */
     public static List<AreaSyncPayload.Area> areas(ServerLevel level) {
-        List<AreaSyncPayload.Area> result = new ArrayList<>();
+        Map<BlockPos, AreaSyncPayload.Area> result = new LinkedHashMap<>();
         for (ActiveBeacon beacon : BeaconTracker.activeBeacons(level)) {
             BeaconFunction function = ModRegistries.FUNCTIONS.get(beacon.function());
             if (function != null && function.showsArea()) {
-                result.add(new AreaSyncPayload.Area(beacon.pos(), beacon.area().radius()));
+                result.put(beacon.pos(), new AreaSyncPayload.Area(beacon.pos(), beacon.area().radius()));
             }
         }
-        return result;
+        Long2IntMap beams = BeamBeacons.of(level);
+        long[] positions = beams.keySet().toLongArray();
+        Arrays.sort(positions);
+        for (long packed : positions) {
+            BlockPos pos = BlockPos.of(packed);
+            int radius = BeaconholdConfig.SERVER.radius(beams.get(packed));
+            result.putIfAbsent(pos, new AreaSyncPayload.Area(pos, radius));
+        }
+        return new ArrayList<>(result.values());
     }
 
     /**

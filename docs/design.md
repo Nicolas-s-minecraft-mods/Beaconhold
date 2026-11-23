@@ -11,14 +11,14 @@ The mod has the API for other mods, the area of a beacon and the command for the
 - **Pyramid level**: the number of complete layers of the pyramid under the beacon, from 0 to 4. The game calculates this number.
 - **Beam**: the light beam of the beacon. A block that stops light (for example stone) stops the beam. Glass does not stop the beam.
 - **Function**: a Beaconhold effect of a beacon, for example "no hostile spawns". A function is different from a vanilla power (Speed, Haste, Resistance, Jump Boost, Strength, Regeneration).
-- **Area**: the space where a function has an effect.
+- **Area**: the space where the functions and the vanilla powers of a beacon have an effect. A beacon has one area.
 
 ## Functions
 
 ### Rules for all functions
 
 - A beacon has one function at a time, or no function.
-- The function of a beacon is an addition to the vanilla powers. The beacon keeps its vanilla powers, and the function does not change them.
+- The function of a beacon is an addition to the vanilla powers. The beacon keeps its vanilla powers. The vanilla powers use the area of the beacon (see [Area](#area)).
 - A function is **active** when all these conditions are true:
   1. The beacon has a function.
   2. The pyramid level is 1 or more.
@@ -54,11 +54,11 @@ The mod has the API for other mods, the area of a beacon and the command for the
   | Pyramid level | Radius (blocks) | Chunks | Chunks for a beacon in the center of its chunk |
   |---|---|---|---|
   | 1 | 20 | 9 to 13 | 9 |
-  | 2 | 47 | 36 to 41 | 39 |
-  | 3 | 73 | 81 to 88 | 85 |
-  | 4 | 100 | 144 to 151 | 145 |
+  | 2 | 38 | 25 to 32 | 25 |
+  | 3 | 57 | 52 to 56 | 54 |
+  | 4 | 75 | 85 to 91 | 89 |
 
-- The server option `maxLoadedChunks` sets the maximum number of chunks that all the beacons of the server load together. The default value is 512: enough for 3 beacons at the pyramid level 4.
+- The server option `maxLoadedChunks` sets the maximum number of chunks that all the beacons of the server load together. The default value is 512: enough for 5 beacons at the pyramid level 4.
 - When a beacon starts and the limit is near, the beacon loads fewer chunks. It loads its own chunk first, then the nearest chunks.
 - When a beacon releases its chunks, the beacons that got fewer chunks get the free capacity at the end of the tick. The beacons get their chunks in the order of the dimensions, then in the order of their start. A beacon that started first gets the free capacity first. No beacon gets fewer chunks because of a release.
 - The command `/beaconhold chunks limit` shows the number of loaded chunks and the limit. The command `/beaconhold chunks limit <chunks>` sets the limit, applies it at once and saves the server options. Only an operator can use the command.
@@ -72,6 +72,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
 
 ## Area
 
+- A beacon has one area for all its functions and for its vanilla powers.
 - The area is a vertical cylinder. Its axis goes through the center of the beacon.
 - The area goes from the bottom to the top of the world. The height of the beacon has no effect on the area.
 - A block is in the area when its horizontal distance to the beacon is equal to or less than the radius. The distance uses the X and Z coordinates of the two blocks.
@@ -80,11 +81,13 @@ The mod has the API for other mods, the area of a beacon and the command for the
   | Pyramid level | Radius (blocks) |
   |---|---|
   | 1 | 20 |
-  | 2 | 47 |
-  | 3 | 73 |
-  | 4 | 100 |
+  | 2 | 38 |
+  | 3 | 57 |
+  | 4 | 75 |
 
 - Server options set the four radii.
+- The vanilla powers of the beacon (Speed, Haste, Resistance, Jump Boost, Strength, Regeneration) apply to the players in the area. The area replaces the vanilla range (a box of 20 to 50 blocks around the beacon). A spectator gets no power.
+- The server option `area.vanillaPowersUseArea` turns this rule off. Then the vanilla powers use the vanilla range.
 - The area of a function of another mod uses the same rules. The other mod can use its own area in its own code.
 
 ## Selection of the function
@@ -148,15 +151,19 @@ The API is for other mods. [api.md](api.md) gives the dependency and examples. F
 
 ## Visual
 
-- The area of an active function shows as a light energy dome. The dome is on the edge of the area: a vertical circle around the beacon.
+- The area of a beacon shows as a light energy dome. The dome is on the edge of the area: a vertical circle around the beacon.
+- A beacon shows the dome when one of these conditions is true:
+  - The beacon has an active function, and the function shows its area.
+  - The beacon is loaded, its pyramid level is 1 or more and no block stops the beam. The beacon has no consumable for this condition.
+- A beacon whose function does not show its area shows no dome. A beacon with no function shows no dome when the option `area.vanillaPowersUseArea` is off.
 - From far, the dome is a faint veil. The veil goes 96 blocks above and below the eyes of the player, and it fades at its top and its bottom.
 - Near the edge, the veil fades out. The dome shows a ring of light on the ground, with particles. It is not a wall, and the player sees through it.
 - The veil fades with the distance. At 256 blocks from the edge, the client does not show the dome.
 - In a cave, more than 6 blocks under the ground, the ring is at the level of the feet of the player.
 - The color of the dome is a light cyan.
-- Each function of the mod has a dome. A function of another mod can have no dome (see [api.md](api.md)).
+- Each function of the mod shows its area. A function of another mod can show no area (see [api.md](api.md)).
 - The server sends to each player only the areas near the player. The edge of such an area is at 320 blocks or less from the player (horizontal distance). This distance is the distance of the dome (256 blocks) and a margin of 64 blocks for the movement of the player.
-- Each second, and at the end of a tick in which a function starts or stops, the server calculates the areas near each player. It sends the list to a player only when the list changes.
+- Each second, and at the end of a tick in which an area starts or stops, the server calculates the areas near each player. It sends the list to a player only when the list changes.
 - A player also gets the areas when the player joins the server, enters a dimension or respawns.
 - The client option `dome.enabled` turns the dome off.
 
@@ -173,7 +180,8 @@ A change of the server options applies at once to the active beacons. The server
 
 | Option | Side | Default | Issue |
 |---|---|---|---|
-| `area.radiusLevel1` to `area.radiusLevel4` | server | 20, 47, 73, 100 | #6 |
+| `area.radiusLevel1` to `area.radiusLevel4` | server | 20, 38, 57, 75 | #6, #44 |
+| `area.vanillaPowersUseArea` | server | on | #44 |
 | `noHostileSpawns.blockSpawners` | server | off | #4, #22 |
 | `loadedChunks.maxLoadedChunks` | server | 512 | #5, #23 |
 | `cost.ticksPerItem` | server | 3750 | #7 |
@@ -184,7 +192,9 @@ A change of the server options applies at once to the active beacons. The server
 
 The owner of the project gives the answers. Until then, the design uses the default values above, and an option keeps each value open.
 
-1. Loaded chunks: is 512 a good default for the limit of the server? Is a limit for each player necessary, in addition to the limit of the server? A limit for each player needs the beacon to save the player that placed it.
+1. Loaded chunks: is 512 a good default for the limit of the server? With the default radii, 512 chunks are enough for 5 beacons at the pyramid level 4. Is a limit for each player necessary, in addition to the limit of the server? A limit for each player needs the beacon to save the player that placed it.
 2. No hostile spawns: do the reinforcements of zombies also stop?
 3. Consumable: does a beacon with no function also use the consumable?
 4. Selection: the function screen opens from a button next to the vanilla beacon screen. Is a separate screen correct?
+5. Dome: a function of another mod can hide its area (`showsArea(false)`). Does a beacon with such a function and an active beam show the dome? The code shows no dome.
+6. Dome: with the option `area.vanillaPowersUseArea` off, does a beacon with no function show the dome? The code shows no dome.

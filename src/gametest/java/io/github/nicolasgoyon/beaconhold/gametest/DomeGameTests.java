@@ -2,6 +2,8 @@ package io.github.nicolasgoyon.beaconhold.gametest;
 
 import io.github.nicolasgoyon.beaconhold.Beaconhold;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
+import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
+import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import io.github.nicolasgoyon.beaconhold.function.ModFunctions;
 import io.github.nicolasgoyon.beaconhold.network.AreaSync;
 import io.github.nicolasgoyon.beaconhold.network.AreaSyncPayload;
@@ -71,6 +73,36 @@ public final class DomeGameTests {
                     helper.assertFalse(hasAnyArea(level, beacon), "A function with no area: no dome");
                     BeaconTestSupport.removeBeacon(helper);
                 })
+                .thenSucceed();
+    }
+
+    /** A beacon with an active beam and no function shows the dome of its area. */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_dome_beam")
+    public static void beaconWithNoFunctionHasADome(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos beacon = BeaconTestSupport.buildBeaconWithNoStock(helper, 2);
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(hasArea(level, beacon, 38), "The dome must have a radius of 38"))
+                .thenExecute(() -> helper.setBlock(BeaconTestSupport.BEACON.above(), Blocks.STONE))
+                .thenWaitUntil(() -> helper.assertFalse(hasAnyArea(level, beacon), "A blocked beam has no dome"))
+                .thenExecute(() -> BeaconTestSupport.removeBeacon(helper))
+                .thenSucceed();
+    }
+
+    /** With the vanilla powers in the vanilla range, a beacon with no function shows no dome. */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_dome_beam_vanilla")
+    public static void beaconWithNoFunctionHasNoDomeWithTheVanillaRange(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BeaconholdConfig.SERVER.setVanillaPowersUseArea(false);
+        BlockPos beacon = BeaconTestSupport.buildBeaconWithNoStock(helper, 1);
+        helper.startSequence()
+                .thenExecuteAfter((int) BeaconTracker.UPDATE_INTERVAL * 3, () -> {
+                    boolean dome = hasAnyArea(level, beacon);
+                    BeaconholdConfig.SERVER.setVanillaPowersUseArea(true);
+                    helper.assertFalse(dome, "No dome with the vanilla range");
+                })
+                .thenWaitUntil(() -> helper.assertTrue(hasArea(level, beacon, 20), "The option on gives the dome again"))
+                .thenExecute(() -> BeaconTestSupport.removeBeacon(helper))
                 .thenSucceed();
     }
 
