@@ -54,7 +54,7 @@ public final class ExampleFunctions {
 ExampleFunctions.FUNCTIONS.register(modEventBus);
 ```
 
-The clients show the area of an active beacon as an energy dome. For a function that does not use the area of the beacon, call `showsArea(false)` on the builder. Then the clients show no dome for this function.
+The clients show the area of an active beacon as an energy dome. For a function that does not use the area of the beacon, call `showsArea(false)` on the builder. Then a beacon with this function shows no dome.
 
 Add the name of the function to the language files of your mod. The key is `beacon_function.<namespace>.<path>`:
 
@@ -84,7 +84,7 @@ for (ActiveBeacon beacon : BeaconholdApi.beaconsCovering(serverLevel, pos, shiel
 - `beaconsCovering(level, pos, function)`: the active beacons with the function that cover the position.
 - `activeBeacons(level)`: all the active beacons of a dimension.
 
-The area is a vertical cylinder for the full height of the world. `BeaconArea.contains(pos)` uses only the X and Z coordinates.
+The area is a vertical cylinder for the full height of the world. `BeaconArea.contains(pos)` uses only the X and Z coordinates. A beacon has one area for all its functions and for its vanilla powers.
 
 The server options set the radii. A change of the options changes the areas at once, with no event. Thus a mod that keeps an area must read it again with a query.
 

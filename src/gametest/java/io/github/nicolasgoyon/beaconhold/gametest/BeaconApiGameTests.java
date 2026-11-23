@@ -126,8 +126,8 @@ public final class BeaconApiGameTests {
                         BeaconholdApi.isCovered(level, beacon, TestFunctions.TEST), "The beacon must be active"))
                 .thenExecute(() -> BeaconTestSupport.addLayer(helper, 2))
                 .thenWaitUntil(() -> helper.assertTrue(
-                        BeaconholdApi.isCovered(level, beacon.offset(47, 0, 0), TestFunctions.TEST),
-                        "Level 2: the radius must be 47"))
+                        BeaconholdApi.isCovered(level, beacon.offset(38, 0, 0), TestFunctions.TEST),
+                        "Level 2: the radius must be 38"))
                 .thenExecute(() -> {
                     List<BeaconFunctionEvent> events = TestFunctions.eventsAt(beacon);
                     helper.assertTrue(events.size() == 3, "Three events: start, stop, start");

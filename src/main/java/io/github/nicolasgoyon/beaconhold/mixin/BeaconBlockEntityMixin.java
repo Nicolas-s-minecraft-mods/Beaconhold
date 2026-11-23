@@ -3,6 +3,7 @@ package io.github.nicolasgoyon.beaconhold.mixin;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconLoadRules;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconLoadState;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
+import io.github.nicolasgoyon.beaconhold.beacon.BeamBeacons;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -16,8 +17,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Keeps the load state of a beacon (see {@link BeaconLoadRules}), and updates the record and the stock of the beacon
- * after the tick of the beacon, at the interval of the vanilla powers.
+ * Keeps the load state of a beacon (see {@link BeaconLoadRules}). After the tick of the beacon, at the interval of the
+ * vanilla powers, it updates the record and the stock of the beacon, and the list of the beacons that show the dome.
  */
 // Mixin calls the injected method. The parameters must be the same as the parameters of the target method.
 @SuppressWarnings({"UnusedMethod", "UnusedVariable"})
@@ -47,6 +48,9 @@ public abstract class BeaconBlockEntityMixin implements BeaconLoadState {
         self.beaconhold$loadState = BeaconLoadRules.afterTick(self.beaconhold$loadState, periodic, scanCompleted);
         if (periodic) {
             BeaconTracker.update(serverLevel, beacon, true);
+            if (self.beaconhold$loadState == BeaconLoadRules.READY) {
+                BeamBeacons.update(serverLevel, beacon);
+            }
         }
     }
 }

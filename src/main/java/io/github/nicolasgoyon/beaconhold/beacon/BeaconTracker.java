@@ -50,6 +50,7 @@ public final class BeaconTracker {
     private static void onLevelTick(LevelTickEvent.Post event) {
         if (event.getLevel() instanceof ServerLevel level && level.getGameTime() % UPDATE_INTERVAL == CLEANUP_TICK) {
             removeMissingBeacons(level);
+            BeamBeacons.removeMissing(level);
         }
     }
 
@@ -236,7 +237,7 @@ public final class BeaconTracker {
     }
 
     /**
-     * Sets the function of a beacon in a loaded chunk, and updates its record at once.
+     * Sets the function of a beacon in a loaded chunk, and updates its record and its dome at once.
      *
      * @param level the dimension
      * @param pos the position of the beacon
@@ -257,6 +258,9 @@ public final class BeaconTracker {
             beacon.setData(ModRegistries.BEACON_FUNCTION, function.location());
         }
         update(level, beacon);
+        if (((BeaconLoadState) beacon).beaconhold$loadState() == BeaconLoadRules.READY) {
+            BeamBeacons.update(level, beacon);
+        }
         return true;
     }
 }
