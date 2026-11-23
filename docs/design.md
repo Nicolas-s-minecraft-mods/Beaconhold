@@ -91,6 +91,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
 - The vanilla powers of the beacon (Speed, Haste, Resistance, Jump Boost, Strength, Regeneration) apply to the players in the area. The area replaces the vanilla range (a box of 20 to 50 blocks around the beacon). A spectator gets no power.
 - The server option `area.vanillaPowersUseArea` turns this rule off. Then the vanilla powers use the vanilla range.
 - Each vanilla power of a beacon that is on has a bonus to its level. The server option `vanillaPowers.levelBonus` sets the bonus. The default value is 1: Speed I becomes Speed II, and Speed II becomes Speed III.
+- The bonus is the exchange for the cost. With the server option `cost.consumableRequired` off, the vanilla powers get no bonus.
 - A beacon that is off gives no vanilla power.
 - The area of a function of another mod uses the same rules. The other mod can use its own area in its own code.
 
@@ -127,7 +128,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
 - With no fuel and no stock, the beacon is off. The beacon keeps its function. A new stock turns the beacon on again at its next update.
 - A beacon that has no update yet is off. Thus a beacon in a world that has no stock is off until a player gives it the consumable.
 - The clients get the power state of each beacon, and they hide the beam of a beacon that is off.
-- The server option `cost.consumableRequired` turns the consumable off. Then the vanilla rule applies: a beacon with a pyramid and a free beam is on. The beacon keeps its stock and its fuel. A change of the option applies at the next update of each beacon.
+- The server option `cost.consumableRequired` turns the consumable off. Then the vanilla rule applies: a beacon with a pyramid and a free beam is on. The beacon keeps its stock and its fuel. The vanilla powers get no level bonus. A change of the option applies at the next update of each beacon.
 - A comparator next to a beacon gives a signal from the level of the stock. The formula is the formula of a container with one slot. An empty stock gives 0, one item gives 1, and a full stack gives 15. The fuel of the last item does not count.
 - The function screen shows the time that the stock and the fuel give, in game days. With less than one game day, the screen shows the text in red, and the beacon makes smoke at each update.
 - An active beacon with less than one game day of stock and fuel warns the players in its area at each update. The client shows a red message above the hotbar and plays a bell sound. The client shows the warning of a beacon at most one time in 5 minutes.

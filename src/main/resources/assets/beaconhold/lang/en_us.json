@@ -14,7 +14,7 @@
   "beaconhold.configuration.domeEnabled": "Show the energy domes",
   "beaconhold.configuration.domeEnabled.tooltip": "On: the game shows the area of each active beacon. From far, a faint veil shows the edge of the area. Near the edge, a ring of light with particles shows the edge.",
   "beaconhold.configuration.levelBonus": "Level bonus of the powers",
-  "beaconhold.configuration.levelBonus.tooltip": "The bonus to the level of each vanilla power of an active beacon. With 1, Speed I becomes Speed II.",
+  "beaconhold.configuration.levelBonus.tooltip": "The bonus to the level of each vanilla power of an active beacon. With 1, Speed I becomes Speed II. With no consumable required, the powers get no bonus.",
   "beaconhold.configuration.loadedChunks": "Loaded chunks",
   "beaconhold.configuration.loadedChunks.tooltip": "The function \"loaded chunks\".",
   "beaconhold.configuration.lowStockWarning": "Warn when the stock is low",

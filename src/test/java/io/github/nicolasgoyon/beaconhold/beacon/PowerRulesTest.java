@@ -32,6 +32,19 @@ class PowerRulesTest {
     }
 
     @Test
+    void withTheConsumableRequiredTheOptionGivesTheBonus() {
+        assertEquals(1, PowerRules.levelBonus(true, 1));
+        assertEquals(3, PowerRules.levelBonus(true, 3));
+        assertEquals(0, PowerRules.levelBonus(true, -2));
+    }
+
+    @Test
+    void withNoConsumableRequiredThePowersGetNoBonus() {
+        assertEquals(0, PowerRules.levelBonus(false, 1));
+        assertEquals(0, PowerRules.levelBonus(false, PowerRules.MAX_LEVEL_BONUS));
+    }
+
+    @Test
     void withTheConsumableRequiredTheBeaconNeedsFuel() {
         assertTrue(PowerRules.isOn(true, true, true));
         assertFalse(PowerRules.isOn(true, true, false));

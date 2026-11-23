@@ -85,7 +85,7 @@ public final class BeaconholdConfig {
                     .translation(key("vanillaPowers"))
                     .push("vanillaPowers");
             levelBonus = builder.comment("The bonus to the level of each vanilla power of an active beacon. "
-                            + "With 1, Speed I becomes Speed II.")
+                            + "With 1, Speed I becomes Speed II. With cost.consumableRequired off, the powers get no bonus.")
                     .translation(key("levelBonus"))
                     .defineInRange("levelBonus", PowerRules.DEFAULT_LEVEL_BONUS, 0, PowerRules.MAX_LEVEL_BONUS);
             builder.pop();

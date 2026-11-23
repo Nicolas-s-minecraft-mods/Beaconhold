@@ -25,7 +25,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  *   <li>A beacon that is off (no consumable) gives no power.
  *   <li>The players in the area of the beacon get the powers, in place of the vanilla range. The server option
  *       {@code area.vanillaPowersUseArea} turns this rule off.
- *   <li>Each power has a bonus to its level (server option {@code vanillaPowers.levelBonus}).
+ *   <li>Each power has a bonus to its level (server option {@code vanillaPowers.levelBonus}). With the server option
+ *       {@code cost.consumableRequired} off, the powers get no bonus.
  * </ul>
  */
 // Mixin calls these methods. Their parameters are the parameters of the changed call, then the parameters of
@@ -64,6 +65,9 @@ public abstract class BeaconPowersMixin {
                     target = "Lnet/minecraft/world/effect/MobEffectInstance;<init>(Lnet/minecraft/core/Holder;IIZZ)V"),
             index = 2)
     private static int beaconhold$levelBonus(int amplifier) {
-        return PowerRules.amplifier(amplifier, BeaconholdConfig.SERVER.levelBonus());
+        return PowerRules.amplifier(
+                amplifier,
+                PowerRules.levelBonus(
+                        BeaconholdConfig.SERVER.consumableRequired(), BeaconholdConfig.SERVER.levelBonus()));
     }
 }
