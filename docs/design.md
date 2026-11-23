@@ -59,12 +59,14 @@ The mod has the API for other mods, the area of a beacon and the command for the
   | 4 | 100 | 144 to 151 | 145 |
 
 - The server option `maxLoadedChunks` sets the maximum number of chunks that all the beacons of the server load together. The default value is 512: enough for 3 beacons at the pyramid level 4.
-- When a beacon starts and the limit is near, the beacon loads fewer chunks. It loads its own chunk first, then the nearest chunks. When another beacon releases its chunks, the beacon does not get more chunks. It gets them when it starts its function again, or after a change of the server options.
+- When a beacon starts and the limit is near, the beacon loads fewer chunks. It loads its own chunk first, then the nearest chunks.
+- When a beacon releases its chunks, the beacons that got fewer chunks get the free capacity at the end of the tick. The beacons get their chunks in the order of the dimensions, then in the order of their start. A beacon that started first gets the free capacity first. No beacon gets fewer chunks because of a release.
 - The command `/beaconhold chunks limit` shows the number of loaded chunks and the limit. The command `/beaconhold chunks limit <chunks>` sets the limit, applies it at once and saves the server options. Only an operator can use the command.
 - The chunks stay loaded after a restart of the server. Each dimension saves the list of the chunks that each beacon loads. NeoForge saves the tickets of the chunks. When the server loads a world, it removes the tickets that the saved list of the chunks does not contain.
 - When the server starts, it makes the tickets agree with the saved lists:
   - An active beacon with this function in the saved list of the beacons gets a ticket again for each of its saved chunks.
   - A saved position with no active beacon with this function releases its chunks.
+  - Then the beacons get their chunks again with the current options, as after a change of the options. Thus a change of the options in the file of a stopped server applies at the start.
 - When the function stops, the beacon releases its chunks. When a pyramid level changes, the beacon releases its chunks, then loads the chunks of the new area.
 - A change of the server options applies at once (see [Options](#options)).
 
