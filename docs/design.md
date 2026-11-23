@@ -63,8 +63,11 @@ The mod has the API for other mods, the area of a beacon and the command for the
   | 4 | 75 | 85 to 91 | 89 |
 
 - The server option `maxLoadedChunks` sets the maximum number of chunks that all the beacons of the server load together. The default value is 512: enough for 5 beacons at the pyramid level 4.
-- When a beacon starts and the limit is near, the beacon loads fewer chunks. It loads its own chunk first, then the nearest chunks.
-- When a beacon releases its chunks, the beacons that got fewer chunks get the free capacity at the end of the tick. The beacons get their chunks in the order of the dimensions, then in the order of their start. A beacon that started first gets the free capacity first. No beacon gets fewer chunks because of a release.
+- The server option `maxChunksPerPlayer` sets the maximum number of chunks that the beacons of one player load together. The default value is 256: enough for 2 beacons at the pyramid level 4.
+- The owner of a beacon is the player that placed it. The beacon saves its owner. A beacon that no player placed (for example a beacon from a command or a structure) has no known owner.
+- A beacon with a known owner has the two limits. A beacon with no known owner has only the limit of the server.
+- When a beacon starts and a limit is near, the beacon loads fewer chunks. It loads its own chunk first, then the nearest chunks.
+- When a beacon releases its chunks, the beacons that got fewer chunks get the free capacity at the end of the tick. The limit for each player also applies. The beacons get their chunks in the order of the dimensions, then in the order of their start. A beacon that started first gets the free capacity first. No beacon gets fewer chunks because of a release.
 - The command `/beaconhold chunks limit` shows the number of loaded chunks and the limit. The command `/beaconhold chunks limit <chunks>` sets the limit, applies it at once and saves the server options. Only an operator can use the command.
 - The chunks stay loaded after a restart of the server. Each dimension saves the list of the chunks that each beacon loads. NeoForge saves the tickets of the chunks. When the server loads a world, it removes the tickets that the saved list of the chunks does not contain.
 - When the server starts, it makes the tickets agree with the saved lists:
@@ -109,7 +112,8 @@ The mod has the API for other mods, the area of a beacon and the command for the
   - The screen shows the function of the beacon, its state (active or not active), the stock of the consumable and the cost.
   - A beacon can have a pyramid and a free beam, but no fuel and no stock. Then the screen tells in red that the beacon is off because it has no consumable.
   - For the function "loaded chunks", the screen also shows the chunks that the beacon loads. It also shows the chunks that all the beacons of the server load, and the limit of the server.
-  - The screen shows this text in red when the limit gives the beacon fewer chunks than its area. The tooltip of the text also gives the number of chunks of the area.
+  - The screen shows this text in red when a limit gives the beacon fewer chunks than its area. The tooltip of the text also gives the number of chunks of the area.
+  - A second line shows the chunks that all the beacons of the owner load, and the limit for each player. The line is red when the owner has no free capacity. For a beacon with no known owner, the line tells that the owner is unknown.
   - A click on a function selects it. A new selection replaces the current function. The server checks the selection.
   - The button "Back" opens the vanilla beacon screen again.
 - The beacon saves its function. A beacon that a player breaks loses its function.
@@ -140,7 +144,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
 
 ## Saved data and updates
 
-- Each dimension of the server saves a list of the beacons that have a function. For each beacon, the list keeps the position, the pyramid level, the function and the state (active or not).
+- Each dimension of the server saves a list of the beacons that have a function. For each beacon, the list keeps the position, the pyramid level, the function, the state (active or not) and the owner.
 - The beacon updates its entry each 80 ticks (4 seconds), at the same time as the vanilla powers.
 - A beacon in a chunk that is not loaded keeps its last state. The queries use the saved list, so they do not load chunks.
 - Each dimension keeps a spatial index of the areas of the active beacons, in memory. The index puts each area in the cells of a grid of 64 blocks. A query reads only the areas of the cell of the position. A change of a record updates the index at once. A change of the radii makes the index again at the next query.
@@ -192,7 +196,7 @@ A change of the server options applies at once to the active beacons. The server
 - The areas use the new radii. The queries of the API and the function "no hostile spawns" use the new areas.
 - The clients get the areas again, so the domes show the new areas.
 - A beacon with no function shows or hides its dome at once when the option `area.vanillaPowersUseArea` changes.
-- The beacons with the function "loaded chunks" load the chunks of their new areas, with the new limit. The beacons get their chunks in the order of the dimensions, then in the order of their start. A beacon that started first keeps its chunks first.
+- The beacons with the function "loaded chunks" load the chunks of their new areas, with the new limits. The beacons get their chunks in the order of the dimensions, then in the order of their start. A beacon that started first keeps its chunks first.
 - A change of the options gives no `Start` event and no `Stop` event. Each active beacon whose radius changes gives an `AreaChange` event, with the old area and the new area.
 
 | Option | Side | Default | Issue |
@@ -202,6 +206,7 @@ A change of the server options applies at once to the active beacons. The server
 | `vanillaPowers.levelBonus` | server | 1 | #47 |
 | `noHostileSpawns.blockSpawners` | server | off | #4, #22 |
 | `loadedChunks.maxLoadedChunks` | server | 512 | #5, #23 |
+| `loadedChunks.maxChunksPerPlayer` | server | 256 | #19 |
 | `cost.ticksPerItem` | server | 3750 | #7 |
 | `cost.consumableRequired` | server | on | #34 |
 | `beaconhold:beacon_consumables` | item tag (data) | amethyst shard, prismarine crystals, nether quartz | #8 |

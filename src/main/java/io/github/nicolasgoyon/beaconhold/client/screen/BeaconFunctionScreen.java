@@ -26,14 +26,14 @@ import net.minecraft.world.item.Items;
 /**
  * The function screen of a beacon. It shows the functions of the registry, the function of the beacon and its state,
  * the cost and the stock of the consumable. For the function "loaded chunks", it also shows the loaded chunks of the
- * beacon and of the server, and the limit of the server. The cost does not depend on the function. A click on a function sends the id of its button to the server.
+ * beacon and of the server, the limit of the server, and the use and the limit of the owner of the beacon. The cost does not depend on the function. A click on a function sends the id of its button to the server.
  */
 public final class BeaconFunctionScreen extends AbstractContainerScreen<BeaconFunctionMenu> {
     private static final String PREFIX = "screen.beaconhold.functions.";
     private static final int ROWS = 3;
     private static final int ROW_HEIGHT = 22;
     private static final int LIST_TOP = 30;
-    private static final int BAR_Y = 132;
+    private static final int BAR_Y = 142;
     private static final int CHUNKS_Y = 121;
     private static final int STOCK_TEXT_X = 30;
     private static final int TEXT_COLOR = 0x404040;
@@ -49,7 +49,7 @@ public final class BeaconFunctionScreen extends AbstractContainerScreen<BeaconFu
     public BeaconFunctionScreen(BeaconFunctionMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         this.imageWidth = 176;
-        this.imageHeight = 240;
+        this.imageHeight = 250;
     }
 
     @Override
@@ -175,7 +175,7 @@ public final class BeaconFunctionScreen extends AbstractContainerScreen<BeaconFu
                 && mouseX >= leftPos + 8
                 && mouseX < leftPos + imageWidth - 4
                 && mouseY >= chunksY - 1
-                && mouseY < chunksY + 9) {
+                && mouseY < chunksY + 19) {
             graphics.renderTooltip(font, font.split(chunksTooltip(), 200), mouseX, mouseY);
         }
         int costY = topPos + BeaconFunctionMenu.STOCK_Y + 1;
@@ -186,12 +186,17 @@ public final class BeaconFunctionScreen extends AbstractContainerScreen<BeaconFu
     }
 
     private Component chunksTooltip() {
+        Component owner = menu.hasOwner()
+                ? Component.translatable(PREFIX + "chunks.owner.tooltip", menu.ownerChunks(), menu.playerLimit())
+                : Component.translatable(PREFIX + "chunks.owner.none.tooltip");
         return Component.translatable(
-                PREFIX + "chunks.tooltip",
-                menu.loadedChunks(),
-                menu.areaChunks(),
-                menu.serverChunks(),
-                menu.serverLimit());
+                        PREFIX + "chunks.tooltip",
+                        menu.loadedChunks(),
+                        menu.areaChunks(),
+                        menu.serverChunks(),
+                        menu.serverLimit())
+                .append(" ")
+                .append(owner);
     }
 
     private List<Component> stockTooltip() {
@@ -257,12 +262,22 @@ public final class BeaconFunctionScreen extends AbstractContainerScreen<BeaconFu
                 Component.translatable(PREFIX + "cost.short", CostRules.minutes(ticks), CostRules.seconds(ticks)),
                 STOCK_TEXT_X, stockY + 10, TEXT_COLOR, false);
         if (menu.hasLoadedChunks()) {
-            // Red when the limit of the server gives the beacon fewer chunks than its area.
+            // Red when a limit gives the beacon fewer chunks than its area.
             int chunksColor = menu.loadedChunks() < menu.areaChunks() ? INACTIVE_COLOR : TEXT_COLOR;
             graphics.drawString(font,
                     Component.translatable(
                             PREFIX + "chunks", menu.loadedChunks(), menu.serverChunks(), menu.serverLimit()),
                     8, CHUNKS_Y, chunksColor, false);
+            if (menu.hasOwner()) {
+                // Red when the beacons of the owner load the limit for each player.
+                int ownerColor = menu.ownerChunks() >= menu.playerLimit() ? INACTIVE_COLOR : TEXT_COLOR;
+                graphics.drawString(font,
+                        Component.translatable(PREFIX + "chunks.owner", menu.ownerChunks(), menu.playerLimit()),
+                        8, CHUNKS_Y + 10, ownerColor, false);
+            } else {
+                graphics.drawString(font, Component.translatable(PREFIX + "chunks.owner.none"), 8, CHUNKS_Y + 10,
+                        TEXT_COLOR, false);
+            }
         }
     }
 }

@@ -3,8 +3,10 @@ package io.github.nicolasgoyon.beaconhold.registry;
 import com.mojang.serialization.Codec;
 import io.github.nicolasgoyon.beaconhold.api.BeaconFunction;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
+import java.util.UUID;
 import java.util.function.Supplier;
 import net.minecraft.core.Registry;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -61,6 +63,16 @@ public final class ModRegistries {
             () -> AttachmentType.builder(() -> true)
                     .serialize(Codec.BOOL)
                     .sync(ByteBufCodecs.BOOL)
+                    .build());
+
+    /**
+     * The player that placed a beacon. The beacon saves it. A beacon that no player placed has no value. The default
+     * value is not an owner: use {@code getExistingData}.
+     */
+    public static final Supplier<AttachmentType<UUID>> BEACON_OWNER = ATTACHMENTS.register(
+            "owner",
+            () -> AttachmentType.builder(() -> new UUID(0L, 0L))
+                    .serialize(UUIDUtil.CODEC)
                     .build());
 
     private ModRegistries() {
