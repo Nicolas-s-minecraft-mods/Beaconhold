@@ -4,7 +4,7 @@ Beaconhold is a mod for Minecraft 1.21.1 (NeoForge). It gives more functions to 
 
 ## State
 
-The mod has the API for other mods, the area of a beacon, the command for the operators and the energy dome. It has the functions "no hostile spawns" and "loaded chunks". This document gives the rules of the mod. Each rule that is not in the code yet has the mark **planned** and the number of its issue.
+The mod has the API for other mods, the area of a beacon, the command for the operators, the function screen and the energy dome. It has the functions "no hostile spawns" and "loaded chunks". This document gives the rules of the mod. Each rule that is not in the code yet has the mark **planned** and the number of its issue.
 
 ## Terms
 
@@ -87,10 +87,19 @@ The mod has the API for other mods, the area of a beacon, the command for the op
   - `/beaconhold function set <position> <function>` sets the function.
   - `/beaconhold function clear <position>` removes the function.
   - `/beaconhold function get <position>` shows the function and its state.
-- The player selects the function in the beacon screen. The screen shows the functions and the cost of each function. A new selection replaces the current function. **Planned** (#7).
+- The player selects the function in the function screen of the beacon:
+  - The button "Functions" next to the vanilla beacon screen opens the function screen. The rules of the vanilla beacon screen (distance, lock) also apply to the function screen.
+  - The function screen lists the functions of the registry, sorted by id, with an icon. The entry "No function" removes the function. With more than 5 entries, the screen has pages.
+  - The screen shows the function of the beacon, its state (active or not active) and the cost. The tooltip of each function also shows the cost.
+  - A click on a function selects it. A new selection replaces the current function. The server checks the selection.
+  - The button "Back" opens the vanilla beacon screen again.
 - The beacon saves its function. A beacon that a player breaks loses its function.
 
 ## Cost
+
+- All the functions have the same cost. The server option `cost.ticksPerItem` gives the number of ticks for each item of the consumable. The default value is 3,750 ticks, so one stack of 64 items lasts 10 game days. The function screen shows this cost.
+
+### Consumption
 
 **Planned** (#8).
 
@@ -100,7 +109,6 @@ The mod has the API for other mods, the area of a beacon, the command for the op
   - prismarine crystals,
   - nether quartz.
 - The owner of the project did not confirm the items. The list stays a server option.
-- One stack lasts about 10 game days (240,000 ticks). A stack of 64 items thus uses one item each 3,750 ticks (about 3 minutes).
 - With no consumable, the function stops. The beacon keeps its vanilla powers.
 - The beacon screen shows the stock. The player gets a sign when the stock is low.
 
@@ -150,6 +158,7 @@ The server options are in `serverconfig/beaconhold-server.toml` in the world fol
 | `noHostileSpawns.blockSpawners` | server | off | #4 |
 | `loadedChunks.chunksLevel1` to `loadedChunks.chunksLevel4` | server | 1, 5, 9, 13 | #5 |
 | `loadedChunks.maxLoadedChunks` | server | 256 | #5 |
+| `cost.ticksPerItem` | server | 3750 | #7 |
 | `consumables` | server | amethyst shard, prismarine crystals, nether quartz | #8 (planned) |
 | `dome.enabled` | client | on | #9 |
 
@@ -161,4 +170,4 @@ The owner of the project gives the answers. Until then, the design uses the defa
 2. Loaded chunks: are 13 chunks at level 4 correct for "about 15 chunks"? Is a limit for each player necessary, in addition to the limit of the server? A limit for each player needs the beacon to save the player that placed it.
 3. No hostile spawns: do the raids, the trial spawners or the reinforcements of zombies also stop?
 4. Consumable: which 2 or 3 items? Does each function use a different item?
-5. Selection: until the beacon screen exists, the function needs a command. Is a command for operators correct?
+5. Selection: the function screen opens from a button next to the vanilla beacon screen. Is a separate screen correct? Do the functions have different costs?

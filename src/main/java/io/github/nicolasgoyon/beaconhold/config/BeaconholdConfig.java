@@ -1,5 +1,6 @@
 package io.github.nicolasgoyon.beaconhold.config;
 
+import io.github.nicolasgoyon.beaconhold.cost.CostRules;
 import io.github.nicolasgoyon.beaconhold.function.ChunkRules;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
@@ -53,6 +54,9 @@ public final class BeaconholdConfig {
         /** The maximum number of chunks that all the beacons of the server load together. */
         private final ModConfigSpec.IntValue maxLoadedChunks;
 
+        /** The number of ticks for each consumable item of an active function. */
+        private final ModConfigSpec.IntValue ticksPerItem;
+
         Server(ModConfigSpec.Builder builder) {
             builder.comment("The area of the beacon functions: a vertical cylinder around the beacon.")
                     .translation(key("area"))
@@ -93,6 +97,35 @@ public final class BeaconholdConfig {
                     .translation(key("maxLoadedChunks"))
                     .defineInRange("maxLoadedChunks", ChunkRules.DEFAULT_MAX_LOADED_CHUNKS, 0, MAX_LOADED_CHUNKS);
             builder.pop();
+
+            builder.comment("The cost of the beacon functions.").translation(key("cost")).push("cost");
+            ticksPerItem = builder.comment("The number of ticks for each consumable item of an active function. "
+                            + "With 3750 ticks, one stack of 64 items lasts 10 game days.")
+                    .translation(key("ticksPerItem"))
+                    .defineInRange(
+                            "ticksPerItem",
+                            CostRules.DEFAULT_TICKS_PER_ITEM,
+                            CostRules.MIN_TICKS_PER_ITEM,
+                            CostRules.MAX_TICKS_PER_ITEM);
+            builder.pop();
+        }
+
+        /**
+         * Gives the number of ticks for each consumable item of an active function.
+         *
+         * @return the value of the option {@code cost.ticksPerItem}
+         */
+        public int ticksPerItem() {
+            return ticksPerItem.getAsInt();
+        }
+
+        /**
+         * Sets the option {@code cost.ticksPerItem}. The GameTests use this method.
+         *
+         * @param value the new value
+         */
+        public void setTicksPerItem(int value) {
+            ticksPerItem.set(value);
         }
 
         /**
