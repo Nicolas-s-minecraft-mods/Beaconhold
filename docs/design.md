@@ -152,7 +152,9 @@ The API is for other mods. [api.md](api.md) gives the dependency and examples. F
 - In a cave, more than 6 blocks under the ground, the ring is at the level of the feet of the player.
 - The color of the dome is a light cyan.
 - Each function of the mod has a dome. A function of another mod can have no dome (see [api.md](api.md)).
-- The server sends the areas of the active beacons of a dimension to the players in this dimension. It sends them when a function starts or stops, and when a player enters the dimension.
+- The server sends to each player only the areas near the player. The edge of such an area is at 320 blocks or less from the player (horizontal distance). This distance is the distance of the dome (256 blocks) and a margin of 64 blocks for the movement of the player.
+- Each second, and at the end of a tick in which a function starts or stops, the server calculates the areas near each player. It sends the list to a player only when the list changes.
+- A player also gets the areas when the player joins the server, enters a dimension or respawns.
 - The client option `dome.enabled` turns the dome off.
 
 ## Options
