@@ -1,5 +1,6 @@
 package io.github.nicolasgoyon.beaconhold.config;
 
+import io.github.nicolasgoyon.beaconhold.beacon.PowerRules;
 import io.github.nicolasgoyon.beaconhold.cost.CostRules;
 import io.github.nicolasgoyon.beaconhold.function.ChunkRules;
 import net.neoforged.neoforge.common.ModConfigSpec;
@@ -45,6 +46,9 @@ public final class BeaconholdConfig {
         /** True if the vanilla powers of a beacon use the area of the beacon. */
         private final ModConfigSpec.BooleanValue vanillaPowersUseArea;
 
+        /** The bonus to the level of each vanilla power of a beacon. */
+        private final ModConfigSpec.IntValue levelBonus;
+
         /** True if the function "no hostile spawns" also stops the monster spawners. */
         private final ModConfigSpec.BooleanValue blockSpawners;
 
@@ -71,6 +75,15 @@ public final class BeaconholdConfig {
                             + "use the area of the beacon. False: the vanilla powers use the vanilla range.")
                     .translation(key("vanillaPowersUseArea"))
                     .define("vanillaPowersUseArea", true);
+            builder.pop();
+
+            builder.comment("The vanilla powers of a beacon.")
+                    .translation(key("vanillaPowers"))
+                    .push("vanillaPowers");
+            levelBonus = builder.comment("The bonus to the level of each vanilla power of an active beacon. "
+                            + "With 1, Speed I becomes Speed II.")
+                    .translation(key("levelBonus"))
+                    .defineInRange("levelBonus", PowerRules.DEFAULT_LEVEL_BONUS, 0, PowerRules.MAX_LEVEL_BONUS);
             builder.pop();
 
             builder.comment("The function \"no hostile spawns\".")
@@ -157,6 +170,24 @@ public final class BeaconholdConfig {
          */
         public void setVanillaPowersUseArea(boolean value) {
             vanillaPowersUseArea.set(value);
+        }
+
+        /**
+         * Gives the bonus to the level of each vanilla power of a beacon.
+         *
+         * @return the value of the option {@code vanillaPowers.levelBonus}
+         */
+        public int levelBonus() {
+            return levelBonus.getAsInt();
+        }
+
+        /**
+         * Sets the option {@code vanillaPowers.levelBonus}. The GameTests use this method.
+         *
+         * @param value the new value
+         */
+        public void setLevelBonus(int value) {
+            levelBonus.set(value);
         }
 
         /**

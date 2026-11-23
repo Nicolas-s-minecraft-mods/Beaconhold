@@ -28,7 +28,8 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
  * Keeps the saved list of the beacons with a function, and posts the events of the changes.
  *
  * <p>Each beacon updates its record each {@link #UPDATE_INTERVAL} ticks, in the same tick as its vanilla powers. At each
- * update, an operating beacon uses its stock of the consumable. A loaded beacon keeps its saved active state until it
+ * update, a beacon with a pyramid and a free beam uses its stock of the consumable, with or without a function. A beacon
+ * with no consumable is off (see {@link BeaconPower}). A loaded beacon keeps its saved active state until it
  * knows its pyramid level and its beam (see {@link BeaconLoadRules}). The dimension also removes the records of the loaded
  * positions that have no beacon.
  */
@@ -76,20 +77,22 @@ public final class BeaconTracker {
         BeaconSavedData data = BeaconSavedData.get(level);
         BeaconRecord before = data.get(pos);
         Optional<ResourceKey<BeaconFunction>> current = readFunction(beacon);
-        boolean savedActive = before != null
-                && before.active()
-                && current.filter(function -> function.location().equals(before.function())).isPresent();
+        boolean wasOn = !BeaconPower.isOff(beacon);
+        boolean savedActive = current.isEmpty()
+                ? wasOn
+                : before != null
+                        && before.active()
+                        && current.filter(function -> function.location().equals(before.function()))
+                                .isPresent();
         if (BeaconLoadRules.keepsSavedState(((BeaconLoadState) beacon).beaconhold$loadState(), savedActive)) {
             return;
         }
+        int pyramidLevel = ((BeaconBlockEntityAccessor) beacon).getBeaconholdLevels();
+        boolean canOperate = pyramidLevel > 0 && !beacon.getBeamSections().isEmpty();
+        boolean active = BeaconStock.operate(level, beacon, wasOn, canOperate, periodic);
+        BeaconPower.update(beacon, active);
         BeaconRecord after = current
-                .map(function -> {
-                    int pyramidLevel = ((BeaconBlockEntityAccessor) beacon).getBeaconholdLevels();
-                    boolean canOperate = pyramidLevel > 0 && !beacon.getBeamSections().isEmpty();
-                    boolean wasActive = before != null && before.active();
-                    boolean active = BeaconStock.operate(level, beacon, wasActive, canOperate, periodic);
-                    return new BeaconRecord(pos, pyramidLevel, active, function.location());
-                })
+                .map(function -> new BeaconRecord(pos, pyramidLevel, active, function.location()))
                 .orElse(null);
         apply(level, data, pos, before, after);
     }

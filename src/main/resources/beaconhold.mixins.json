@@ -4,6 +4,7 @@
   "package": "io.github.nicolasgoyon.beaconhold.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "BeaconBeamMixin",
     "BeaconBlockEntityAccessor",
     "BeaconBlockEntityMixin",
     "BeaconBlockMixin",
