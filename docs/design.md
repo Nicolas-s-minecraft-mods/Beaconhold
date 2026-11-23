@@ -146,6 +146,7 @@ The API is for other mods. [api.md](api.md) gives the dependency and examples. F
 - **Events** on the NeoForge event bus:
   - `Start`: a beacon starts a function.
   - `Stop`: a beacon stops a function.
+  - `AreaChange`: a change of the server options changes the area of an active function. The event gives the old area and the new area.
   - A change of the pyramid level stops the function with the old area, then starts it with the new area.
 - **Publication**: the release publishes the jar, the sources jar and the Javadoc jar to GitHub Packages. Another mod compiles against this jar.
 
@@ -176,7 +177,7 @@ A change of the server options applies at once to the active beacons. The server
 - The areas use the new radii. The queries of the API and the function "no hostile spawns" use the new areas.
 - The clients get the areas again, so the domes show the new areas.
 - The beacons with the function "loaded chunks" load the chunks of their new areas, with the new limit. The beacons get their chunks in the order of the dimensions, then in the order of their start. A beacon that started first keeps its chunks first.
-- A change of the options gives no `Start` event and no `Stop` event.
+- A change of the options gives no `Start` event and no `Stop` event. Each active beacon whose radius changes gives an `AreaChange` event, with the old area and the new area.
 
 | Option | Side | Default | Issue |
 |---|---|---|---|

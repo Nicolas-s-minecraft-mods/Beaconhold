@@ -86,7 +86,7 @@ for (ActiveBeacon beacon : BeaconholdApi.beaconsCovering(serverLevel, pos, shiel
 
 The area is a vertical cylinder for the full height of the world. `BeaconArea.contains(pos)` uses only the X and Z coordinates. A beacon has one area for all its functions and for its vanilla powers.
 
-The server options set the radii. A change of the options changes the areas at once, with no event. Thus a mod that keeps an area must read it again with a query.
+The server options set the radii. A change of the options changes the areas at once. Each active beacon whose radius changes gives a `BeaconFunctionEvent.AreaChange` event (see [Events](#events)).
 
 A function is active when all these conditions are true:
 
@@ -118,13 +118,33 @@ The server posts the events on `NeoForge.EVENT_BUS`:
   - The beacon has no consumable.
   - The function changes.
   - A player or an explosion removes the beacon.
+- `BeaconFunctionEvent.AreaChange`: a change of the server options changes the area of an active function. `getOldArea()` gives the area before the change. `getBeacon().area()` gives the new area. The function stays active.
 
-A change of the pyramid level gives a `Stop` event with the old area, then a `Start` event with the new area.
+When each event occurs:
+
+| Change | Events |
+|---|---|
+| A beacon gets a function, and it can operate | `Start` |
+| A block stops the beam, the pyramid is not complete or the beacon has no consumable | `Stop` |
+| The function of an active beacon changes | `Stop` with the old function, then `Start` with the new function |
+| A player or an explosion removes an active beacon | `Stop` |
+| The pyramid level of an active beacon changes | `Stop` with the old area, then `Start` with the new area |
+| A change of the server options changes the radius of the pyramid level of an active beacon | `AreaChange` |
+| A change of the server options does not change the radius (for example the limit of the chunks) | no event |
+| A restart of the server, or a change of the options file of a stopped server | no event |
+
+The server posts the `AreaChange` events after it applies the new options. Then the queries use the new areas.
 
 ```java
 NeoForge.EVENT_BUS.addListener(BeaconFunctionEvent.Start.class, event -> {
     if (event.getBeacon().function().equals(shield)) {
         // Start the effect in event.getBeacon().area().
+    }
+});
+
+NeoForge.EVENT_BUS.addListener(BeaconFunctionEvent.AreaChange.class, event -> {
+    if (event.getBeacon().function().equals(shield)) {
+        // Move the effect from event.getOldArea() to event.getBeacon().area().
     }
 });
 ```
