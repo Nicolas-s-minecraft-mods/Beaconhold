@@ -12,7 +12,7 @@ NeoForge mod: more functions for the beacon (no hostile spawns, loaded chunks) a
 
 ## State
 
-The mod is in development. It has an API for other mods ([docs/api.md](docs/api.md)), but no function of its own yet. The rules and the planned functions are in [docs/design.md](docs/design.md).
+The mod is in development. It has an API for other mods ([docs/api.md](docs/api.md)), and the function "no hostile spawns". The rules and the planned functions are in [docs/design.md](docs/design.md).
 
 ## Contribute
 
