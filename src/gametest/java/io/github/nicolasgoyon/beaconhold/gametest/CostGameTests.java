@@ -21,9 +21,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ComparatorBlock;
 import net.minecraft.world.level.block.HopperBlock;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.ComparatorBlockEntity;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -298,5 +300,35 @@ public final class CostGameTests {
                     BeaconTestSupport.removeBeacon(helper);
                 })
                 .thenSucceed();
+    }
+
+    /** A comparator next to a beacon gives a signal from the level of the stock. The signal follows a change. */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_cost_comparator")
+    public static void comparatorReadsTheStock(GameTestHelper helper) {
+        BeaconTestSupport.buildBeaconWithNoStock(helper, 1);
+        // A block stops the beam, so that the beacon does not use its stock during the test.
+        helper.setBlock(BeaconTestSupport.BEACON.above(), Blocks.STONE);
+        BlockPos comparator = BeaconTestSupport.BEACON.east();
+        helper.setBlock(
+                comparator, Blocks.COMPARATOR.defaultBlockState().setValue(ComparatorBlock.FACING, Direction.WEST));
+        BeaconTestSupport.setStock(helper, new ItemStack(Items.AMETHYST_SHARD, 32));
+        helper.startSequence()
+                .thenWaitUntil(() -> assertComparator(helper, comparator, 8))
+                .thenExecute(() -> BeaconTestSupport.setStock(helper, new ItemStack(Items.AMETHYST_SHARD, 64)))
+                .thenWaitUntil(() -> assertComparator(helper, comparator, 15))
+                .thenExecute(() -> BeaconTestSupport.setStock(helper, ItemStack.EMPTY))
+                .thenWaitUntil(() -> assertComparator(helper, comparator, 0))
+                .thenExecute(() -> {
+                    helper.setBlock(comparator, Blocks.AIR);
+                    helper.setBlock(BeaconTestSupport.BEACON.above(), Blocks.AIR);
+                    BeaconTestSupport.removeBeacon(helper);
+                })
+                .thenSucceed();
+    }
+
+    private static void assertComparator(GameTestHelper helper, BlockPos comparator, int expected) {
+        ComparatorBlockEntity entity = helper.getBlockEntity(comparator);
+        int signal = entity.getOutputSignal();
+        helper.assertTrue(signal == expected, "The comparator must give " + expected + ", got " + signal);
     }
 }

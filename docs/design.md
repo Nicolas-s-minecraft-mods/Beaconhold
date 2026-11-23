@@ -128,6 +128,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
 - A beacon that has no update yet is off. Thus a beacon in a world that has no stock is off until a player gives it the consumable.
 - The clients get the power state of each beacon, and they hide the beam of a beacon that is off.
 - The server option `cost.consumableRequired` turns the consumable off. Then the vanilla rule applies: a beacon with a pyramid and a free beam is on. The beacon keeps its stock and its fuel. A change of the option applies at the next update of each beacon.
+- A comparator next to a beacon gives a signal from the level of the stock. The formula is the formula of a container with one slot. An empty stock gives 0, one item gives 1, and a full stack gives 15. The fuel of the last item does not count.
 - The function screen shows the time that the stock and the fuel give, in game days. With less than one game day, the screen shows the text in red, and the beacon makes smoke at each update.
 - An active beacon with less than one game day of stock and fuel warns the players in its area at each update. The client shows a red message above the hotbar and plays a bell sound. The client shows the warning of a beacon at most one time in 5 minutes.
 - The client option `warnings.lowStock` turns the warning off. With the server option `cost.consumableRequired` off, the beacons send no warning.

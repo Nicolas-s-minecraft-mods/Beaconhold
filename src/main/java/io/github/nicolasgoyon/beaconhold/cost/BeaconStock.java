@@ -109,6 +109,17 @@ public final class BeaconStock {
     }
 
     /**
+     * Gives the signal of a comparator next to a beacon.
+     *
+     * @param beacon the beacon
+     * @return a signal from 0 to 15, from the level of the stock
+     */
+    public static int comparatorSignal(BeaconBlockEntity beacon) {
+        ItemStack stock = stock(beacon);
+        return CostRules.comparatorSignal(stock.getCount(), stock.getMaxStackSize());
+    }
+
+    /**
      * Gives the time of operation that the stock and the fuel of a beacon give.
      *
      * @param beacon the beacon

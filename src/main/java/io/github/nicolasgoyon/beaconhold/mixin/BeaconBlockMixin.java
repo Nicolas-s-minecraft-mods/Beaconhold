@@ -12,7 +12,10 @@ import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 
-/** Drops the stock of the consumable when a player, an explosion or a command removes a beacon. */
+/**
+ * Drops the stock of the consumable when a player, an explosion or a command removes a beacon. Gives a comparator signal
+ * from the level of the stock.
+ */
 @Mixin(BeaconBlock.class)
 public abstract class BeaconBlockMixin extends BaseEntityBlock {
     protected BeaconBlockMixin(Properties properties) {
@@ -31,5 +34,15 @@ public abstract class BeaconBlockMixin extends BaseEntityBlock {
             LowStockWarnings.remove(serverLevel, pos);
         }
         super.onRemove(state, level, pos, newState, movedByPiston);
+    }
+
+    @Override
+    protected boolean hasAnalogOutputSignal(BlockState state) {
+        return true;
+    }
+
+    @Override
+    protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
+        return level.getBlockEntity(pos) instanceof BeaconBlockEntity beacon ? BeaconStock.comparatorSignal(beacon) : 0;
     }
 }
