@@ -172,7 +172,7 @@ The API is for other mods. [api.md](api.md) gives the dependency and examples. F
 - Near the edge, the veil fades out. The dome shows a ring of light on the ground, with particles. It is not a wall, and the player sees through it.
 - The veil fades with the distance. At 256 blocks from the edge, the client does not show the dome.
 - In a cave, more than 6 blocks under the ground, the ring is at the level of the feet of the player.
-- The color of the dome is a light cyan.
+- The default color of the dome is a light cyan (`#9EE8FF`). Client options set the color and the maximum opacity of the veil and of the ring. The default maximum opacities are 12 % for the veil and 50 % for the ring. An opacity of 0 hides the veil or the ring.
 - Each function of the mod shows its area. A function of another mod can show no area (see [api.md](api.md)).
 - The server sends to each player only the areas near the player. The edge of such an area is at 320 blocks or less from the player (horizontal distance). This distance is the distance of the dome (256 blocks) and a margin of 64 blocks for the movement of the player.
 - Each second, and at the end of a tick in which an area starts or stops, the server calculates the areas near each player. It sends the list to a player only when the list changes.
@@ -201,6 +201,8 @@ A change of the server options applies at once to the active beacons. The server
 | `cost.consumableRequired` | server | on | #34 |
 | `beaconhold:beacon_consumables` | item tag (data) | amethyst shard, prismarine crystals, nether quartz | #8 |
 | `dome.enabled` | client | on | #9 |
+| `dome.veilColor`, `dome.ringColor` | client | `#9EE8FF` | #33 |
+| `dome.veilOpacity`, `dome.ringOpacity` | client | 12, 50 (percent) | #33 |
 | `warnings.lowStock` | client | on | #30 |
 
 ## Open questions
