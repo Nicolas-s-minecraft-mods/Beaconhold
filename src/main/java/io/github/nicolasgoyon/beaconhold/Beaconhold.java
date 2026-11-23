@@ -5,6 +5,7 @@ import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
 import io.github.nicolasgoyon.beaconhold.command.BeaconholdCommand;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
+import io.github.nicolasgoyon.beaconhold.config.ServerOptionChanges;
 import io.github.nicolasgoyon.beaconhold.function.LoadedChunks;
 import io.github.nicolasgoyon.beaconhold.function.ModFunctions;
 import io.github.nicolasgoyon.beaconhold.function.NoHostileSpawns;
@@ -28,6 +29,7 @@ public final class Beaconhold {
     public Beaconhold(IEventBus modEventBus, ModContainer container) {
         LOGGER.debug("{} {} starts", MOD_ID, container.getModInfo().getVersion());
         container.registerConfig(ModConfig.Type.SERVER, BeaconholdConfig.SERVER_SPEC);
+        ServerOptionChanges.register(modEventBus);
         ModRegistries.register(modEventBus);
         ModFunctions.register(modEventBus);
         BeaconTracker.register();

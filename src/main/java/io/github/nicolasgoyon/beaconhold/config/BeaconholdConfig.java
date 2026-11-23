@@ -152,6 +152,17 @@ public final class BeaconholdConfig {
         }
 
         /**
+         * Sets the radius of the area for a pyramid level. The GameTests use this method. The method does not save the
+         * file.
+         *
+         * @param pyramidLevel the pyramid level, from 1 to 4
+         * @param value the new radius in blocks
+         */
+        public void setRadius(int pyramidLevel, int value) {
+            radii[pyramidLevel - 1].set(value);
+        }
+
+        /**
          * Gives the radius of the area for a pyramid level.
          *
          * @param pyramidLevel the pyramid level, from 0 to 4

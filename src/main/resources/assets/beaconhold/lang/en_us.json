@@ -34,7 +34,7 @@
   "beaconhold.configuration.title": "Beaconhold options",
   "beaconhold.name": "Beaconhold",
   "commands.beaconhold.chunks.limit.get": "The beacons load %s chunks. The limit of the server is %s chunks.",
-  "commands.beaconhold.chunks.limit.set": "The limit of the server is %s chunks now. The beacons load %s chunks. A beacon uses the new limit when it starts its function again.",
+  "commands.beaconhold.chunks.limit.set": "The limit of the server is %s chunks now. The beacons load %s chunks.",
   "commands.beaconhold.function.clear": "The beacon at %s has no function now.",
   "commands.beaconhold.function.get.active": "The beacon at %s has the function %s. The function is active: pyramid level %s, radius %s blocks.",
   "commands.beaconhold.function.get.inactive": "The beacon at %s has the function %s. The function is not active: a block stops the beam, the pyramid is not complete, or the beacon has no consumable.",

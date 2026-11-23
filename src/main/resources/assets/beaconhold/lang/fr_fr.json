@@ -34,7 +34,7 @@
   "beaconhold.configuration.title": "Options de Beaconhold",
   "beaconhold.name": "Beaconhold",
   "commands.beaconhold.chunks.limit.get": "Les balises chargent %s chunks. La limite du serveur est de %s chunks.",
-  "commands.beaconhold.chunks.limit.set": "La limite du serveur est maintenant de %s chunks. Les balises chargent %s chunks. Une balise utilise la nouvelle limite quand elle démarre de nouveau sa fonction.",
+  "commands.beaconhold.chunks.limit.set": "La limite du serveur est maintenant de %s chunks. Les balises chargent %s chunks.",
   "commands.beaconhold.function.clear": "La balise en %s n'a plus de fonction.",
   "commands.beaconhold.function.get.active": "La balise en %s a la fonction %s. La fonction est active : niveau de pyramide %s, rayon de %s blocs.",
   "commands.beaconhold.function.get.inactive": "La balise en %s a la fonction %s. La fonction n'est pas active : un bloc arrête le faisceau, la pyramide n'est pas complète, ou la balise n'a pas de consommable.",

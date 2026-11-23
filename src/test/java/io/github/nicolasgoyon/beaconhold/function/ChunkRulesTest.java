@@ -1,5 +1,6 @@
 package io.github.nicolasgoyon.beaconhold.function;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -133,5 +134,31 @@ class ChunkRulesTest {
         assertFalse(ChunkRules.keepsChunks(new BeaconRecord(pos, 2, false, loadedChunks), loadedChunks));
         assertFalse(ChunkRules.keepsChunks(new BeaconRecord(pos, 2, true, other), loadedChunks));
         assertFalse(ChunkRules.keepsChunks(null, loadedChunks));
+    }
+
+    @Test
+    void allocationFollowsTheOrderOfTheBeacons() {
+        assertArrayEquals(new int[] {145, 145, 145}, ChunkRules.allocate(new int[] {145, 145, 145}, 512));
+        assertArrayEquals(new int[] {145, 145, 145, 77}, ChunkRules.allocate(new int[] {145, 145, 145, 145}, 512));
+        assertArrayEquals(new int[] {145, 55, 0}, ChunkRules.allocate(new int[] {145, 145, 9}, 200));
+        assertArrayEquals(new int[] {0, 0}, ChunkRules.allocate(new int[] {9, 9}, 0));
+        assertArrayEquals(new int[0], ChunkRules.allocate(new int[0], 512));
+    }
+
+    @Test
+    void aHigherLimitGivesNoBeaconFewerChunks() {
+        int[] wanted = {41, 9, 151, 85, 13};
+        int[] before = ChunkRules.allocate(wanted, 0);
+        for (int max = 1; max <= 320; max++) {
+            int[] after = ChunkRules.allocate(wanted, max);
+            int total = 0;
+            for (int i = 0; i < wanted.length; i++) {
+                assertTrue(after[i] >= before[i], "Beacon " + i + " with the limit " + max);
+                assertTrue(after[i] <= wanted[i], "Beacon " + i + " with the limit " + max);
+                total += after[i];
+            }
+            assertTrue(total <= max, "The total stays in the limit " + max);
+            before = after;
+        }
     }
 }

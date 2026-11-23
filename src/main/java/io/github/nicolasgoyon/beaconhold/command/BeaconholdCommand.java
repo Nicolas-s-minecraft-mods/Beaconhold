@@ -10,6 +10,7 @@ import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconRecord;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
+import io.github.nicolasgoyon.beaconhold.config.ServerOptionChanges;
 import io.github.nicolasgoyon.beaconhold.function.LoadedChunks;
 import io.github.nicolasgoyon.beaconhold.registry.ModRegistries;
 import java.util.Optional;
@@ -126,6 +127,7 @@ public final class BeaconholdCommand {
         int limit = IntegerArgumentType.getInteger(context, "chunks");
         BeaconholdConfig.SERVER.setMaxLoadedChunks(limit);
         BeaconholdConfig.SERVER_SPEC.save();
+        ServerOptionChanges.apply(context.getSource().getServer());
         int used = LoadedChunks.totalLoadedChunks(context.getSource().getLevel());
         context.getSource().sendSuccess(() -> Component.translatable(CHUNKS_PREFIX + "set", limit, used), true);
         return limit;

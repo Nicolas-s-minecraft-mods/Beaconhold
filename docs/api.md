@@ -86,6 +86,8 @@ for (ActiveBeacon beacon : BeaconholdApi.beaconsCovering(serverLevel, pos, shiel
 
 The area is a vertical cylinder for the full height of the world. `BeaconArea.contains(pos)` uses only the X and Z coordinates.
 
+The server options set the radii. A change of the options changes the areas at once, with no event. Thus a mod that keeps an area must read it again with a query.
+
 A function is active when all these conditions are true:
 
 - The beacon has the function.
