@@ -9,6 +9,7 @@ import io.github.nicolasgoyon.beaconhold.cost.CostRules;
 import io.github.nicolasgoyon.beaconhold.menu.BeaconFunctionMenu;
 import io.github.nicolasgoyon.beaconhold.registry.ModRegistries;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
@@ -19,10 +20,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.HopperBlock;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.HopperBlockEntity;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.items.IItemHandler;
 
 /** In-game tests of the cost of the functions: the stock of the consumable, the consumption and the drop. */
 @GameTestHolder(Beaconhold.MOD_ID)
@@ -111,6 +116,43 @@ public final class CostGameTests {
                             BeaconStock.fuel(BeaconTestSupport.beaconEntity(helper)) < fuelAtSave[0],
                             "The loaded beacon must use its fuel");
                     helper.assertTrue(stockCount(helper) == 9, "The loaded beacon must not use a new item");
+                    BeaconTestSupport.removeBeacon(helper);
+                })
+                .thenSucceed();
+    }
+
+    /** Places a hopper next to the beacon that points to the beacon, with items in its first slot. */
+    private static HopperBlockEntity hopperTo(GameTestHelper helper, Direction side, ItemStack items) {
+        BlockPos relative = BeaconTestSupport.BEACON.relative(side);
+        helper.setBlock(relative, Blocks.HOPPER.defaultBlockState().setValue(HopperBlock.FACING, side.getOpposite()));
+        HopperBlockEntity hopper = helper.getBlockEntity(relative);
+        hopper.setItem(0, items);
+        return hopper;
+    }
+
+    /** A hopper puts consumable items into the stock. A hopper with other items puts nothing. Nothing comes out. */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_cost_hopper")
+    public static void hopperFillsTheStock(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos beacon = BeaconTestSupport.buildBeaconWithNoStock(helper, 1);
+        HopperBlockEntity quartz = hopperTo(helper, Direction.EAST, new ItemStack(Items.QUARTZ, 5));
+        HopperBlockEntity dirt = hopperTo(helper, Direction.WEST, new ItemStack(Items.DIRT, 5));
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(stockCount(helper) == 5, "The hopper must fill the stock"))
+                .thenIdle(20)
+                .thenExecute(() -> {
+                    helper.assertTrue(quartz.isEmpty(), "The quartz hopper must be empty");
+                    helper.assertTrue(dirt.getItem(0).getCount() == 5, "The dirt must stay in its hopper");
+                    helper.assertTrue(
+                            BeaconStock.stock(BeaconTestSupport.beaconEntity(helper)).is(Items.QUARTZ),
+                            "The stock must hold quartz only");
+                    IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, beacon, Direction.DOWN);
+                    helper.assertTrue(handler != null, "The beacon must have an item capability");
+                    helper.assertTrue(handler.extractItem(0, 64, false).isEmpty(), "Nothing comes out");
+                    helper.assertTrue(stockCount(helper) == 5, "The stock must stay");
+                    dirt.clearContent();
+                    helper.setBlock(BeaconTestSupport.BEACON.east(), Blocks.AIR);
+                    helper.setBlock(BeaconTestSupport.BEACON.west(), Blocks.AIR);
                     BeaconTestSupport.removeBeacon(helper);
                 })
                 .thenSucceed();

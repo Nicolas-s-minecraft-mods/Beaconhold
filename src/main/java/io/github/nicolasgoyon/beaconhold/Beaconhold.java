@@ -6,6 +6,7 @@ import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
 import io.github.nicolasgoyon.beaconhold.command.BeaconholdCommand;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import io.github.nicolasgoyon.beaconhold.config.ServerOptionChanges;
+import io.github.nicolasgoyon.beaconhold.cost.StockItemHandler;
 import io.github.nicolasgoyon.beaconhold.function.LoadedChunks;
 import io.github.nicolasgoyon.beaconhold.function.ModFunctions;
 import io.github.nicolasgoyon.beaconhold.function.NoHostileSpawns;
@@ -38,5 +39,6 @@ public final class Beaconhold {
         LoadedChunks.register(modEventBus);
         ModNetwork.register(modEventBus);
         ModMenus.register(modEventBus);
+        StockItemHandler.register(modEventBus);
     }
 }

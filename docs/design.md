@@ -110,6 +110,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
   - nether quartz.
 - A data pack can change the tag.
 - The player puts one stack of the consumable in the slot of the function screen. The slot accepts one stack of one item.
+- A hopper, or a pipe of another mod, puts the consumable into the stock from all the sides of the beacon. It uses the item capability of the beacon. It puts items only into an empty stock or a stock of the same item, up to one stack. A hopper or a pipe cannot take items out of the stock.
 - The server option `cost.ticksPerItem` gives the number of ticks for each item. The default value is 3,750 ticks, so one stack of 64 items lasts 10 game days.
 - The beacon has a fuel: the ticks that the last item still gives. When the fuel is empty and the function can operate, the beacon takes one item from the stock. Each update removes the ticks of operation from the fuel.
 - A beacon uses its consumable only when it has a function, a pyramid and a free beam. A beacon in a chunk that is not loaded uses no consumable.
