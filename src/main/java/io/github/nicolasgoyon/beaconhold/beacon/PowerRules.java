@@ -35,6 +35,17 @@ public final class PowerRules {
     }
 
     /**
+     * Gives the bonus to the level of the vanilla powers. The bonus is the exchange for the cost of the beacon.
+     *
+     * @param consumableRequired the value of the server option {@code cost.consumableRequired}
+     * @param optionBonus the value of the server option {@code vanillaPowers.levelBonus}
+     * @return the bonus of the option when the beacon needs the consumable, else 0
+     */
+    public static int levelBonus(boolean consumableRequired, int optionBonus) {
+        return consumableRequired ? Math.max(0, optionBonus) : 0;
+    }
+
+    /**
      * Gives the amplifier of a vanilla power with the bonus.
      *
      * @param vanillaAmplifier the amplifier that the vanilla beacon gives: 0 for level I, 1 for level II

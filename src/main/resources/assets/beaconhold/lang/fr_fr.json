@@ -14,7 +14,7 @@
   "beaconhold.configuration.domeEnabled": "Afficher les dômes d'énergie",
   "beaconhold.configuration.domeEnabled.tooltip": "Activé : le jeu affiche la zone de chaque balise active. De loin, un voile léger montre le bord de la zone. Près du bord, un anneau de lumière avec des particules montre le bord.",
   "beaconhold.configuration.levelBonus": "Bonus de niveau des pouvoirs",
-  "beaconhold.configuration.levelBonus.tooltip": "Le bonus au niveau de chaque pouvoir vanilla d'une balise active. Avec 1, Vitesse I devient Vitesse II.",
+  "beaconhold.configuration.levelBonus.tooltip": "Le bonus au niveau de chaque pouvoir vanilla d'une balise active. Avec 1, Vitesse I devient Vitesse II. Sans consommable obligatoire, les pouvoirs n'ont pas de bonus.",
   "beaconhold.configuration.loadedChunks": "Chunks chargés",
   "beaconhold.configuration.loadedChunks.tooltip": "La fonction « chunks chargés ».",
   "beaconhold.configuration.lowStockWarning": "Alerter quand le stock est bas",

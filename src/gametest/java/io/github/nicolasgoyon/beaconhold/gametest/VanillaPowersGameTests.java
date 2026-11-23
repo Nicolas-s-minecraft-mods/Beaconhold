@@ -164,4 +164,25 @@ public final class VanillaPowersGameTests {
                 })
                 .thenSucceed();
     }
+
+    /** With the option {@code cost.consumableRequired} off, the beacon is on with no stock, and the powers get no bonus. */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_powers_no_bonus")
+    public static void noConsumableRequiredGivesNoBonus(GameTestHelper helper) {
+        BeaconholdConfig.Server config = BeaconholdConfig.SERVER;
+        config.setConsumableRequired(false);
+        BlockPos beacon = speedBeacon(helper, false);
+        List<ChunkPos> forced = new ArrayList<>();
+        Player near = addPlayer(helper, beacon, NEAR, forced);
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(
+                        near.hasEffect(MobEffects.MOVEMENT_SPEED), "A beacon with no consumable required gives Speed"))
+                .thenExecute(() -> {
+                    config.setConsumableRequired(true);
+                    MobEffectInstance speed = near.getEffect(MobEffects.MOVEMENT_SPEED);
+                    helper.assertTrue(
+                            speed != null && speed.getAmplifier() == 0, "Speed must have the vanilla amplifier 0");
+                    cleanUp(helper, List.of(near), forced);
+                })
+                .thenSucceed();
+    }
 }
