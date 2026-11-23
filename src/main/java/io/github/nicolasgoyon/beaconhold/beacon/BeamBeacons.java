@@ -39,6 +39,7 @@ public final class BeamBeacons {
         boolean shows = DomeRules.showsDome(
                 pyramidLevel,
                 !beacon.getBeamSections().isEmpty(),
+                !BeaconPower.isOff(beacon),
                 showsArea,
                 BeaconholdConfig.SERVER.vanillaPowersUseArea());
         long pos = beacon.getBlockPos().asLong();

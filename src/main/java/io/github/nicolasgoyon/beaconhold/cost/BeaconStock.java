@@ -71,10 +71,10 @@ public final class BeaconStock {
      *
      * @param level the dimension of the beacon
      * @param beacon the beacon
-     * @param wasActive true if the function was active after the last update
-     * @param canOperate true if the beacon has a function, a pyramid and a free beam
+     * @param wasActive true if the beacon was on after the last update
+     * @param canOperate true if the beacon has a pyramid and a free beam
      * @param periodic true for the update at the interval of the vanilla powers. Only this update gives the sign.
-     * @return true if the function is active
+     * @return true if the beacon is on: it can operate and it has fuel
      */
     public static boolean operate(
             ServerLevel level, BeaconBlockEntity beacon, boolean wasActive, boolean canOperate, boolean periodic) {

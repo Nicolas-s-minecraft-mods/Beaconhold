@@ -95,6 +95,8 @@ A function is active when all these conditions are true:
 - No block stops the beam.
 - The beacon has fuel or a stock of the consumable.
 
+A beacon with no fuel and no stock is off: it has no beam, no vanilla powers and no active function.
+
 A beacon updates its state each 80 ticks (4 seconds). A beacon in a chunk that is not loaded keeps its last state. After a load of its chunk, an active beacon keeps its last state until it knows its pyramid level and its beam. Thus a restart of the server gives no `Stop` event and no `Start` event.
 
 ## Get and set the function of a beacon

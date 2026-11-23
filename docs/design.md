@@ -19,6 +19,8 @@ The mod has the API for other mods, the area of a beacon and the command for the
 
 - A beacon has one function at a time, or no function.
 - The function of a beacon is an addition to the vanilla powers. The beacon keeps its vanilla powers. The vanilla powers use the area of the beacon (see [Area](#area)).
+- A beacon is **on** when these conditions are true: the pyramid level is 1 or more, no block stops the beam, and the beacon has fuel or a stock of the consumable.
+- Each other beacon is **off**: it has no beam, no vanilla powers, no function and no dome (see [Cost](#cost)).
 - A function is **active** when all these conditions are true:
   1. The beacon has a function.
   2. The pyramid level is 1 or more.
@@ -88,6 +90,8 @@ The mod has the API for other mods, the area of a beacon and the command for the
 - Server options set the four radii.
 - The vanilla powers of the beacon (Speed, Haste, Resistance, Jump Boost, Strength, Regeneration) apply to the players in the area. The area replaces the vanilla range (a box of 20 to 50 blocks around the beacon). A spectator gets no power.
 - The server option `area.vanillaPowersUseArea` turns this rule off. Then the vanilla powers use the vanilla range.
+- Each vanilla power of a beacon that is on has a bonus to its level. The server option `vanillaPowers.levelBonus` sets the bonus. The default value is 1: Speed I becomes Speed II, and Speed II becomes Speed III.
+- A beacon that is off gives no vanilla power.
 - The area of a function of another mod uses the same rules. The other mod can use its own area in its own code.
 
 ## Selection of the function
@@ -100,6 +104,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
   - The button "Functions" next to the vanilla beacon screen opens the function screen. The rules of the vanilla beacon screen (distance, lock) also apply to the function screen.
   - The function screen lists the functions of the registry, sorted by id, with an icon. The entry "No function" removes the function. With more than 5 entries, the screen has pages.
   - The screen shows the function of the beacon, its state (active or not active), the stock of the consumable and the cost.
+  - A beacon can have a pyramid and a free beam, but no fuel and no stock. Then the screen tells in red that the beacon is off because it has no consumable.
   - For the function "loaded chunks", the screen also shows the chunks that the beacon loads. It also shows the chunks that all the beacons of the server load, and the limit of the server.
   - The screen shows this text in red when the limit gives the beacon fewer chunks than its area. The tooltip of the text also gives the number of chunks of the area.
   - A click on a function selects it. A new selection replaces the current function. The server checks the selection.
@@ -108,7 +113,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
 
 ## Cost
 
-- The consumable keeps the function of the beacon active. The cost does not depend on the function, and all the functions use the same consumable.
+- The consumable keeps the beacon on: its beam, its vanilla powers, its function and its dome. The cost does not depend on the function. A beacon with no function also uses the consumable.
 - The consumable is an item of the game. The beacon accepts the items of the item tag `beaconhold:beacon_consumables`. The items are alternatives for the same fuel. The list:
   - amethyst shard,
   - prismarine crystals,
@@ -118,8 +123,10 @@ The mod has the API for other mods, the area of a beacon and the command for the
 - A hopper, or a pipe of another mod, puts the consumable into the stock from all the sides of the beacon. It uses the item capability of the beacon. It puts items only into an empty stock or a stock of the same item, up to one stack. A hopper or a pipe cannot take items out of the stock.
 - The server option `cost.ticksPerItem` gives the number of ticks for each item. The default value is 3,750 ticks, so one stack of 64 items lasts 10 game days.
 - The beacon has a fuel: the ticks that the last item still gives. When the fuel is empty and the function can operate, the beacon takes one item from the stock. Each update removes the ticks of operation from the fuel.
-- A beacon uses its consumable only when it has a function, a pyramid and a free beam. A beacon in a chunk that is not loaded uses no consumable.
-- With no fuel and no stock, the function stops. The beacon keeps its function and its vanilla powers. A new stock starts the function again.
+- A beacon uses its consumable only when it has a pyramid and a free beam. A beacon in a chunk that is not loaded uses no consumable.
+- With no fuel and no stock, the beacon is off. The beacon keeps its function. A new stock turns the beacon on again at its next update.
+- A beacon that has no update yet is off. Thus a beacon in a world that has no stock is off until a player gives it the consumable.
+- The clients get the power state of each beacon, and they hide the beam of a beacon that is off.
 - The function screen shows the time that the stock and the fuel give, in game days. With less than one game day, the screen shows the text in red, and the beacon makes smoke at each update.
 - The beacon saves its stock, its fuel and the time of the last use of the fuel. They stay after a restart of the server.
 - A beacon that a player or an explosion removes drops its stock. The fuel of the last item is lost.
@@ -155,7 +162,7 @@ The API is for other mods. [api.md](api.md) gives the dependency and examples. F
 - The area of a beacon shows as a light energy dome. The dome is on the edge of the area: a vertical circle around the beacon.
 - A beacon shows the dome when one of these conditions is true:
   - The beacon has an active function, and the function shows its area.
-  - The beacon is loaded, its pyramid level is 1 or more and no block stops the beam. The beacon has no consumable for this condition.
+  - The beacon is loaded and on (see [Rules for all functions](#rules-for-all-functions)).
 - A beacon whose function does not show its area shows no dome. A beacon with no function shows no dome when the option `area.vanillaPowersUseArea` is off.
 - From far, the dome is a faint veil. The veil goes 96 blocks above and below the eyes of the player, and it fades at its top and its bottom.
 - Near the edge, the veil fades out. The dome shows a ring of light on the ground, with particles. It is not a wall, and the player sees through it.
@@ -183,6 +190,7 @@ A change of the server options applies at once to the active beacons. The server
 |---|---|---|---|
 | `area.radiusLevel1` to `area.radiusLevel4` | server | 20, 38, 57, 75 | #6, #44 |
 | `area.vanillaPowersUseArea` | server | on | #44 |
+| `vanillaPowers.levelBonus` | server | 1 | #47 |
 | `noHostileSpawns.blockSpawners` | server | off | #4, #22 |
 | `loadedChunks.maxLoadedChunks` | server | 512 | #5, #23 |
 | `cost.ticksPerItem` | server | 3750 | #7 |
@@ -195,7 +203,8 @@ The owner of the project gives the answers. Until then, the design uses the defa
 
 1. Loaded chunks: is 512 a good default for the limit of the server? With the default radii, 512 chunks are enough for 5 beacons at the pyramid level 4. Is a limit for each player necessary, in addition to the limit of the server? A limit for each player needs the beacon to save the player that placed it.
 2. No hostile spawns: do the reinforcements of zombies also stop?
-3. Consumable: does a beacon with no function also use the consumable?
-4. Selection: the function screen opens from a button next to the vanilla beacon screen. Is a separate screen correct?
-5. Dome: a function of another mod can hide its area (`showsArea(false)`). Does a beacon with such a function and an active beam show the dome? The code shows no dome.
-6. Dome: with the option `area.vanillaPowersUseArea` off, does a beacon with no function show the dome? The code shows no dome.
+3. Selection: the function screen opens from a button next to the vanilla beacon screen. Is a separate screen correct?
+4. Dome: a function of another mod can hide its area (`showsArea(false)`). Does a beacon with such a function and an active beam show the dome? The code shows no dome.
+5. Dome: with the option `area.vanillaPowersUseArea` off, does a beacon with no function show the dome? The code shows no dome.
+6. Vanilla powers: does the level bonus also apply to Regeneration? The code applies it to all the powers.
+7. Beam: does the beam also go off with no stock? The code hides it.

@@ -226,7 +226,10 @@ public final class BeaconFunctionScreen extends AbstractContainerScreen<BeaconFu
         graphics.drawString(font, title, 8, 6, TEXT_COLOR, false);
         Component state;
         int color;
-        if (menu.functionIndex() < 0) {
+        if (menu.isOff()) {
+            state = Component.translatable(PREFIX + "state.off");
+            color = INACTIVE_COLOR;
+        } else if (menu.functionIndex() < 0) {
             state = Component.translatable(PREFIX + "state.none");
             color = TEXT_COLOR;
         } else if (menu.isActive()) {

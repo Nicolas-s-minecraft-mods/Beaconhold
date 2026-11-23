@@ -5,6 +5,7 @@ import io.github.nicolasgoyon.beaconhold.api.BeaconFunction;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
 import java.util.function.Supplier;
 import net.minecraft.core.Registry;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
@@ -49,6 +50,17 @@ public final class ModRegistries {
             "fuel_tick",
             () -> AttachmentType.builder(() -> 0L)
                     .serialize(Codec.LONG, tick -> tick != 0L)
+                    .build());
+
+    /**
+     * True when the beacon is off: it has no pyramid, no free beam, or no fuel and no stock. The beacon saves it, and
+     * the clients get it, so that they hide the beam. A beacon is off until its first update.
+     */
+    public static final Supplier<AttachmentType<Boolean>> BEACON_OFF = ATTACHMENTS.register(
+            "off",
+            () -> AttachmentType.builder(() -> true)
+                    .serialize(Codec.BOOL)
+                    .sync(ByteBufCodecs.BOOL)
                     .build());
 
     private ModRegistries() {

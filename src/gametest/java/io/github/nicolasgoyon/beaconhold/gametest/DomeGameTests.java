@@ -2,6 +2,7 @@ package io.github.nicolasgoyon.beaconhold.gametest;
 
 import io.github.nicolasgoyon.beaconhold.Beaconhold;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
+import io.github.nicolasgoyon.beaconhold.beacon.BeaconPower;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import io.github.nicolasgoyon.beaconhold.function.ModFunctions;
@@ -12,6 +13,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -76,11 +79,11 @@ public final class DomeGameTests {
                 .thenSucceed();
     }
 
-    /** A beacon with an active beam and no function shows the dome of its area. */
+    /** An active beacon with no function shows the dome of its area. */
     @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_dome_beam")
     public static void beaconWithNoFunctionHasADome(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        BlockPos beacon = BeaconTestSupport.buildBeaconWithNoStock(helper, 2);
+        BlockPos beacon = BeaconTestSupport.buildBeacon(helper, 2);
         helper.startSequence()
                 .thenWaitUntil(() -> helper.assertTrue(hasArea(level, beacon, 38), "The dome must have a radius of 38"))
                 .thenExecute(() -> helper.setBlock(BeaconTestSupport.BEACON.above(), Blocks.STONE))
@@ -94,7 +97,7 @@ public final class DomeGameTests {
     public static void beaconWithNoFunctionHasNoDomeWithTheVanillaRange(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BeaconholdConfig.SERVER.setVanillaPowersUseArea(false);
-        BlockPos beacon = BeaconTestSupport.buildBeaconWithNoStock(helper, 1);
+        BlockPos beacon = BeaconTestSupport.buildBeacon(helper, 1);
         helper.startSequence()
                 .thenExecuteAfter((int) BeaconTracker.UPDATE_INTERVAL * 3, () -> {
                     boolean dome = hasAnyArea(level, beacon);
@@ -102,6 +105,24 @@ public final class DomeGameTests {
                     helper.assertFalse(dome, "No dome with the vanilla range");
                 })
                 .thenWaitUntil(() -> helper.assertTrue(hasArea(level, beacon, 20), "The option on gives the dome again"))
+                .thenExecute(() -> BeaconTestSupport.removeBeacon(helper))
+                .thenSucceed();
+    }
+
+    /** A beacon with no consumable is off and shows no dome. A stock shows the dome. */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_dome_off")
+    public static void beaconWithNoConsumableHasNoDome(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos beacon = BeaconTestSupport.buildBeaconWithNoStock(helper, 1);
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(
+                        BeaconPower.isOffWithNoConsumable(BeaconTestSupport.beaconEntity(helper)),
+                        "The beacon must be off with no consumable"))
+                .thenExecute(() -> {
+                    helper.assertFalse(hasAnyArea(level, beacon), "A beacon that is off has no dome");
+                    BeaconTestSupport.setStock(helper, new ItemStack(Items.AMETHYST_SHARD, 64));
+                })
+                .thenWaitUntil(() -> helper.assertTrue(hasArea(level, beacon, 20), "A stock gives the dome"))
                 .thenExecute(() -> BeaconTestSupport.removeBeacon(helper))
                 .thenSucceed();
     }

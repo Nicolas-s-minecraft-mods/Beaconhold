@@ -1,6 +1,7 @@
 package io.github.nicolasgoyon.beaconhold.menu;
 
 import io.github.nicolasgoyon.beaconhold.api.BeaconFunction;
+import io.github.nicolasgoyon.beaconhold.beacon.BeaconPower;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconRecord;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
@@ -63,8 +64,11 @@ public final class BeaconFunctionMenu extends AbstractContainerMenu {
 
     public static final int DATA_LIMIT_HIGH = 8;
 
+    /** The data slot of the power state: 1 when the beacon is off because it has no consumable, else 0. */
+    public static final int DATA_OFF = 9;
+
     /** The number of data slots. */
-    public static final int DATA_COUNT = 9;
+    public static final int DATA_COUNT = 10;
 
     /** The index of the slot of the stock. */
     public static final int STOCK_SLOT = 0;
@@ -161,6 +165,10 @@ public final class BeaconFunctionMenu extends AbstractContainerMenu {
                     case DATA_SERVER_CHUNKS_HIGH -> DataValues.high(LoadedChunks.totalLoadedChunks(level));
                     case DATA_LIMIT_LOW -> DataValues.low(BeaconholdConfig.SERVER.maxLoadedChunks());
                     case DATA_LIMIT_HIGH -> DataValues.high(BeaconholdConfig.SERVER.maxLoadedChunks());
+                    case DATA_OFF -> level.getBlockEntity(pos) instanceof BeaconBlockEntity beacon
+                                    && BeaconPower.isOffWithNoConsumable(beacon)
+                            ? 1
+                            : 0;
                     default -> 0;
                 };
             }
@@ -198,6 +206,15 @@ public final class BeaconFunctionMenu extends AbstractContainerMenu {
      */
     public boolean isActive() {
         return data.get(DATA_ACTIVE) != 0;
+    }
+
+    /**
+     * Tells if the beacon is off because it has no consumable.
+     *
+     * @return true if the beacon has a pyramid and a free beam, but no fuel and no stock
+     */
+    public boolean isOff() {
+        return data.get(DATA_OFF) != 0;
     }
 
     /**

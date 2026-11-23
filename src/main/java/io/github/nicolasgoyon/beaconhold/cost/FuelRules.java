@@ -26,8 +26,8 @@ public final class FuelRules {
      *
      * @param now the game time of this update
      * @param last the game time of the last update
-     * @param wasActive true if the function was active after the last update
-     * @return 0 if the function was not active, else the ticks since the last update, at most {@link #MAX_ELAPSED}
+     * @param wasActive true if the beacon was on after the last update
+     * @return 0 if the beacon was off, else the ticks since the last update, at most {@link #MAX_ELAPSED}
      */
     public static int elapsed(long now, long last, boolean wasActive) {
         if (!wasActive) {
@@ -43,8 +43,8 @@ public final class FuelRules {
      * @param fuel the number of ticks of fuel
      * @param ticksPerItem the number of ticks for each item
      * @param elapsed the number of ticks of operation since the last update
-     * @param canOperate true if the beacon has a function, a pyramid and a free beam
-     * @return the new state. The function is active only if the beacon can operate and has fuel. A fuel under 0 is a
+     * @param canOperate true if the beacon has a pyramid and a free beam
+     * @return the new state. The beacon is on only if it can operate and has fuel. A fuel under 0 is a
      *     debt that the next item pays.
      */
     public static State update(int stock, int fuel, int ticksPerItem, int elapsed, boolean canOperate) {
