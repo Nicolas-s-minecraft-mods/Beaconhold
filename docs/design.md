@@ -4,7 +4,7 @@ Beaconhold is a mod for Minecraft 1.21.1 (NeoForge). It gives more functions to 
 
 ## State
 
-The mod loads in the game. It has no function yet. This document gives the rules of the mod. Each rule that is not in the code yet has the mark **planned** and the number of its issue.
+The mod has the API for other mods, the area of a beacon and the command for the operators. It has no function of its own yet. This document gives the rules of the mod. Each rule that is not in the code yet has the mark **planned** and the number of its issue.
 
 ## Terms
 
@@ -17,12 +17,12 @@ The mod loads in the game. It has no function yet. This document gives the rules
 
 ### Rules for all functions
 
-- A beacon has one function at a time, or no function. **Planned** (#6, #7).
-- The function of a beacon is an addition to the vanilla powers. The beacon keeps its vanilla powers, and the function does not change them. **Planned** (#6).
-- A function is **active** when all these conditions are true. **Planned** (#6, #8):
+- A beacon has one function at a time, or no function.
+- The function of a beacon is an addition to the vanilla powers. The beacon keeps its vanilla powers, and the function does not change them.
+- A function is **active** when all these conditions are true:
   1. The beacon has a function.
   2. The pyramid level is 1 or more.
-  3. The beam is not blocked.
+  3. No block stops the beam.
   4. The beacon has a stock of the consumable (see [Cost](#cost)). **Planned** (#8).
 - A beacon with no active function has no effect of Beaconhold.
 
@@ -66,8 +66,6 @@ The mod loads in the game. It has no function yet. This document gives the rules
 
 ## Area
 
-**Planned** (#6).
-
 - The area is a vertical cylinder. Its axis goes through the center of the beacon.
 - The area goes from the bottom to the top of the world. The height of the beacon has no effect on the area.
 - A block is in the area when its horizontal distance to the beacon is equal to or less than the radius. The distance uses the X and Z coordinates of the two blocks.
@@ -85,7 +83,7 @@ The mod loads in the game. It has no function yet. This document gives the rules
 
 ## Selection of the function
 
-- An operator sets the function of a beacon with a command. **Planned** (#6):
+- An operator sets the function of a beacon with a command:
   - `/beaconhold function set <position> <function>` sets the function.
   - `/beaconhold function clear <position>` removes the function.
   - `/beaconhold function get <position>` shows the function and its state.
@@ -108,8 +106,6 @@ The mod loads in the game. It has no function yet. This document gives the rules
 
 ## Saved data and updates
 
-**Planned** (#6).
-
 - Each dimension of the server saves a list of the beacons that have a function. For each beacon, the list keeps the position, the pyramid level, the function and the state (active or not).
 - The beacon updates its entry each 80 ticks (4 seconds), at the same time as the vanilla powers.
 - A beacon in a chunk that is not loaded keeps its last state. The queries use the saved list, so they do not load chunks.
@@ -117,9 +113,7 @@ The mod loads in the game. It has no function yet. This document gives the rules
 
 ## API
 
-**Planned** (#6).
-
-The API is for other mods. For example, Folkhold Events can protect the blocks near a beacon from storms and earthquakes.
+The API is for other mods. [api.md](api.md) gives the dependency and examples. For example, Folkhold Events can protect the blocks near a beacon from storms and earthquakes.
 
 - The API is in the package `io.github.nicolasgoyon.beaconhold.api`. Each public class has Javadoc.
 - **Registry**: a NeoForge registry of beacon functions (`beaconhold:beacon_function`). Another mod registers its functions with a `DeferredRegister`. A function has an id, a name (a translation key from the id) and an icon.
@@ -132,7 +126,7 @@ The API is for other mods. For example, Folkhold Events can protect the blocks n
   - `Start`: a beacon starts a function.
   - `Stop`: a beacon stops a function.
   - A change of the pyramid level stops the function with the old area, then starts it with the new area.
-- **Publication**: the release publishes the jar, the sources jar and the Javadoc jar to GitHub Packages. Another mod compiles against this jar. `docs/api.md` gives an example.
+- **Publication**: the release publishes the jar, the sources jar and the Javadoc jar to GitHub Packages. Another mod compiles against this jar.
 
 ## Visual
 
@@ -147,11 +141,11 @@ The API is for other mods. For example, Folkhold Events can protect the blocks n
 
 ## Options
 
-The server options are in `serverconfig/beaconhold-server.toml` in the world folder. The client options are in `config/beaconhold-client.toml`. The mod list of the game gives a screen to change the options. **Planned** (#4).
+The server options are in `serverconfig/beaconhold-server.toml` in the world folder. The client options are in `config/beaconhold-client.toml`. The mod list of the game gives a screen to change the options.
 
 | Option | Side | Default | Issue |
 |---|---|---|---|
-| `area.radiusLevel1` to `area.radiusLevel4` | server | 20, 47, 73, 100 | #6 (planned) |
+| `area.radiusLevel1` to `area.radiusLevel4` | server | 20, 47, 73, 100 | #6 |
 | `noHostileSpawns.blockSpawners` | server | off | #4 (planned) |
 | `loadedChunks.chunksLevel1` to `loadedChunks.chunksLevel4` | server | 1, 5, 9, 13 | #5 (planned) |
 | `loadedChunks.maxLoadedChunks` | server | 256 | #5 (planned) |

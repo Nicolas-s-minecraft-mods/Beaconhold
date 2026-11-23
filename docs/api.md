@@ -1,0 +1,114 @@
+# Beaconhold API
+
+The API lets another mod add functions to the beacon, and ask if a position is in the area of a beacon with a function. The API is the package `io.github.nicolasgoyon.beaconhold.api`. The other packages of the mod are not the API: they can change in each version.
+
+## Add the dependency
+
+Each release publishes the jar, the sources jar and the Javadoc jar to GitHub Packages. GitHub Packages needs a GitHub token with the `read:packages` scope, also for a public package.
+
+```groovy
+repositories {
+    maven {
+        name = 'Beaconhold'
+        url = uri('https://maven.pkg.github.com/nicolas-s-minecraft-mods/beaconhold')
+        credentials {
+            username = providers.environmentVariable('GITHUB_ACTOR').getOrElse('')
+            password = providers.environmentVariable('GITHUB_TOKEN').getOrElse('')
+        }
+    }
+}
+
+dependencies {
+    // Replace 0.2.0 with the version of a release (tag v0.2.0).
+    implementation 'io.github.nicolasgoyon.beaconhold:beaconhold:0.2.0'
+}
+```
+
+Add Beaconhold to `neoforge.mods.toml`. Use `type = "optional"` if your mod also operates with no Beaconhold:
+
+```toml
+[[dependencies.examplemod]]
+modId = "beaconhold"
+type = "optional"
+versionRange = "[0.2,)"
+ordering = "NONE"
+side = "BOTH"
+```
+
+With an optional dependency, call the API only when `ModList.get().isLoaded("beaconhold")` is true. Put the calls in a separate class, so that the game does not load the classes of the API when Beaconhold is not there.
+
+## Register a function
+
+A beacon has one function at a time. The function is an addition to the vanilla powers of the beacon.
+
+```java
+public final class ExampleFunctions {
+    public static final DeferredRegister<BeaconFunction> FUNCTIONS =
+            DeferredRegister.create(BeaconholdApi.FUNCTION_REGISTRY_KEY, "examplemod");
+
+    public static final DeferredHolder<BeaconFunction, BeaconFunction> STORM_SHIELD = FUNCTIONS.register(
+            "storm_shield", () -> BeaconFunction.builder().icon(() -> Items.LIGHTNING_ROD).build());
+}
+
+// In the constructor of your mod:
+ExampleFunctions.FUNCTIONS.register(modEventBus);
+```
+
+Add the name of the function to the language files of your mod. The key is `beacon_function.<namespace>.<path>`:
+
+```json
+{
+  "beacon_function.examplemod.storm_shield": "Storm shield"
+}
+```
+
+## Ask if a beacon covers a position
+
+The queries operate on the server thread. They use the saved list of the beacons, so they do not load chunks.
+
+```java
+ResourceKey<BeaconFunction> shield = ExampleFunctions.STORM_SHIELD.getKey();
+
+if (BeaconholdApi.isCovered(serverLevel, pos, shield)) {
+    // The storm does not damage this block.
+}
+
+for (ActiveBeacon beacon : BeaconholdApi.beaconsCovering(serverLevel, pos, shield)) {
+    int radius = beacon.area().radius();
+}
+```
+
+- `isCovered(level, pos, function)`: true if an active beacon with the function covers the position.
+- `beaconsCovering(level, pos, function)`: the active beacons with the function that cover the position.
+- `activeBeacons(level)`: all the active beacons of a dimension.
+
+The area is a vertical cylinder for the full height of the world. `BeaconArea.contains(pos)` uses only the X and Z coordinates.
+
+A function is active when the beacon has the function, a pyramid level of 1 or more, and no block stops its beam. A beacon updates its state each 80 ticks (4 seconds). A beacon in a chunk that is not loaded keeps its last state.
+
+## Get and set the function of a beacon
+
+```java
+Optional<ResourceKey<BeaconFunction>> function = BeaconholdApi.getFunction(serverLevel, beaconPos);
+boolean done = BeaconholdApi.setFunction(serverLevel, beaconPos, shield);
+BeaconholdApi.setFunction(serverLevel, beaconPos, null); // removes the function
+```
+
+`setFunction` needs a beacon in a loaded chunk. It returns false if there is no beacon at the position.
+
+## Events
+
+The server posts the events on `NeoForge.EVENT_BUS`:
+
+- `BeaconFunctionEvent.Start`: a beacon starts a function.
+- `BeaconFunctionEvent.Stop`: a beacon stops a function. Causes: a block stops the beam, the pyramid is not complete, the function changes, or a player or an explosion removes the beacon.
+
+A change of the pyramid level gives a `Stop` event with the old area, then a `Start` event with the new area.
+
+```java
+NeoForge.EVENT_BUS.addListener(BeaconFunctionEvent.Start.class, event -> {
+    if (event.getBeacon().function().equals(shield)) {
+        // Start the effect in event.getBeacon().area().
+    }
+});
+```
