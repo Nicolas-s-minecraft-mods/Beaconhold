@@ -1,6 +1,7 @@
 package io.github.nicolasgoyon.beaconhold.config;
 
 import io.github.nicolasgoyon.beaconhold.beacon.PowerRules;
+import io.github.nicolasgoyon.beaconhold.client.dome.DomeColors;
 import io.github.nicolasgoyon.beaconhold.cost.CostRules;
 import io.github.nicolasgoyon.beaconhold.function.ChunkRules;
 import net.neoforged.neoforge.common.ModConfigSpec;
@@ -273,6 +274,18 @@ public final class BeaconholdConfig {
         /** True if the client shows the energy domes of the active beacons. */
         private final ModConfigSpec.BooleanValue domeEnabled;
 
+        /** The color of the veil, in the format #RRGGBB. */
+        private final ModConfigSpec.ConfigValue<String> veilColor;
+
+        /** The maximum opacity of the veil, in percent. */
+        private final ModConfigSpec.IntValue veilOpacity;
+
+        /** The color of the ring, in the format #RRGGBB. */
+        private final ModConfigSpec.ConfigValue<String> ringColor;
+
+        /** The maximum opacity of the ring, in percent. */
+        private final ModConfigSpec.IntValue ringOpacity;
+
         /** True if the client warns the player when the stock of a beacon is low. */
         private final ModConfigSpec.BooleanValue lowStockWarning;
 
@@ -283,6 +296,18 @@ public final class BeaconholdConfig {
             domeEnabled = builder.comment("True: the client shows the energy domes. False: the client shows no dome.")
                     .translation(key("domeEnabled"))
                     .define("enabled", true);
+            veilColor = builder.comment("The color of the veil (the edge of the area from far), in the format #RRGGBB.")
+                    .translation(key("veilColor"))
+                    .define("veilColor", DomeColors.DEFAULT_COLOR, DomeColors::isValidColor);
+            veilOpacity = builder.comment("The maximum opacity of the veil, in percent. 0: no veil.")
+                    .translation(key("veilOpacity"))
+                    .defineInRange("veilOpacity", DomeColors.DEFAULT_VEIL_OPACITY, 0, 100);
+            ringColor = builder.comment("The color of the ring of light near the edge, in the format #RRGGBB.")
+                    .translation(key("ringColor"))
+                    .define("ringColor", DomeColors.DEFAULT_COLOR, DomeColors::isValidColor);
+            ringOpacity = builder.comment("The maximum opacity of the ring, in percent. 0: no ring.")
+                    .translation(key("ringOpacity"))
+                    .defineInRange("ringOpacity", DomeColors.DEFAULT_RING_OPACITY, 0, 100);
             builder.pop();
 
             builder.comment("The warnings of the beacons.").translation(key("warnings")).push("warnings");
@@ -291,6 +316,42 @@ public final class BeaconholdConfig {
                     .translation(key("lowStockWarning"))
                     .define("lowStock", true);
             builder.pop();
+        }
+
+        /**
+         * Gives the color of the veil.
+         *
+         * @return the value of the option {@code dome.veilColor}, in the format #RRGGBB
+         */
+        public String veilColor() {
+            return veilColor.get();
+        }
+
+        /**
+         * Gives the maximum opacity of the veil.
+         *
+         * @return the value of the option {@code dome.veilOpacity}, in percent
+         */
+        public int veilOpacity() {
+            return veilOpacity.getAsInt();
+        }
+
+        /**
+         * Gives the color of the ring.
+         *
+         * @return the value of the option {@code dome.ringColor}, in the format #RRGGBB
+         */
+        public String ringColor() {
+            return ringColor.get();
+        }
+
+        /**
+         * Gives the maximum opacity of the ring.
+         *
+         * @return the value of the option {@code dome.ringOpacity}, in percent
+         */
+        public int ringOpacity() {
+            return ringOpacity.getAsInt();
         }
 
         /**

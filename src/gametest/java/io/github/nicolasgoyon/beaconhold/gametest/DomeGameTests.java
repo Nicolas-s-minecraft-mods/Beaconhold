@@ -25,6 +25,9 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class DomeGameTests {
     private static final int TIMEOUT = 300;
 
+    /** The option test waits three updates with the option off, then one or two updates for the dome. */
+    private static final int LONG_TIMEOUT = 600;
+
     private DomeGameTests() {
     }
 
@@ -93,7 +96,7 @@ public final class DomeGameTests {
     }
 
     /** With the vanilla powers in the vanilla range, a beacon with no function shows no dome. */
-    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_dome_beam_vanilla")
+    @GameTest(template = "beacon", timeoutTicks = LONG_TIMEOUT, batch = "beaconhold_dome_beam_vanilla")
     public static void beaconWithNoFunctionHasNoDomeWithTheVanillaRange(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BeaconholdConfig.SERVER.setVanillaPowersUseArea(false);
