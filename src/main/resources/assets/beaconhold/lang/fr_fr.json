@@ -45,6 +45,8 @@
   "container.beaconhold.beacon_functions": "Fonctions de la balise",
   "fml.menu.mods.info.description.beaconhold": "Plus de fonctions pour la balise, et une API pour que d'autres mods ajoutent des fonctions à la balise.",
   "screen.beaconhold.functions.back": "Retour",
+  "screen.beaconhold.functions.chunks": "Chunks : %s · serveur : %s/%s",
+  "screen.beaconhold.functions.chunks.tooltip": "La balise charge %s des %s chunks de sa zone. Toutes les balises du serveur chargent %s chunks. La limite du serveur est de %s chunks.",
   "screen.beaconhold.functions.cost": "Coût : 1 consommable toutes les %s min %s s.",
   "screen.beaconhold.functions.cost.short": "%s min %s s par objet",
   "screen.beaconhold.functions.cost.stack": "Une pile de %s objets dure environ %s jours de jeu.",

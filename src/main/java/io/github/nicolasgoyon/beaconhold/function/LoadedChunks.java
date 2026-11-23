@@ -234,6 +234,22 @@ public final class LoadedChunks {
     }
 
     /**
+     * Gives the number of chunks that the area of an active beacon with this function touches.
+     *
+     * @param level the dimension
+     * @param pos the position of the beacon
+     * @return the number of chunks, or 0 if the beacon is not active with this function
+     */
+    public static int areaChunkCount(ServerLevel level, BlockPos pos) {
+        for (ActiveBeacon beacon : BeaconholdApi.beaconsCovering(level, pos, ModFunctions.LOADED_CHUNKS.getKey())) {
+            if (beacon.pos().equals(pos)) {
+                return ChunkRules.areaChunks(pos.getX(), pos.getZ(), beacon.area().radius()).size();
+            }
+        }
+        return 0;
+    }
+
+    /**
      * Gives the chunks that a beacon loads.
      *
      * @param level the dimension

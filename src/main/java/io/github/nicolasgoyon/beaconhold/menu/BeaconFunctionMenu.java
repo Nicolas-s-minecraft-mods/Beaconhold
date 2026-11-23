@@ -3,11 +3,14 @@ package io.github.nicolasgoyon.beaconhold.menu;
 import io.github.nicolasgoyon.beaconhold.api.BeaconFunction;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconRecord;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
+import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import io.github.nicolasgoyon.beaconhold.cost.BeaconStock;
 import io.github.nicolasgoyon.beaconhold.cost.CostRules;
 import io.github.nicolasgoyon.beaconhold.cost.FuelRules;
 import io.github.nicolasgoyon.beaconhold.cost.ModTags;
 import io.github.nicolasgoyon.beaconhold.cost.StockContainer;
+import io.github.nicolasgoyon.beaconhold.function.LoadedChunks;
+import io.github.nicolasgoyon.beaconhold.function.ModFunctions;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
@@ -32,7 +35,7 @@ import net.minecraft.world.level.block.entity.BeaconBlockEntity;
  * function of the beacon, its state and the cost. The player puts the stock of the consumable in the slot of the menu.
  *
  * <p>The buttons of the screen send their id to the server (see {@link FunctionButtons}). The server sets the function
- * of the beacon. The data slots give the function and the state to the client.
+ * of the beacon. The data slots give the function, the state, the fuel and the loaded chunks to the client.
  */
 public final class BeaconFunctionMenu extends AbstractContainerMenu {
     /** The data slot of the index of the function in the sorted list, or -1 for no function. */
@@ -44,8 +47,24 @@ public final class BeaconFunctionMenu extends AbstractContainerMenu {
     /** The data slot of the fuel: the number of ticks that the last consumable item still gives. */
     public static final int DATA_FUEL = 2;
 
+    /** The data slot of the number of chunks that the beacon loads. */
+    public static final int DATA_CHUNKS = 3;
+
+    /** The data slot of the number of chunks that the area of the active "loaded chunks" beacon touches. */
+    public static final int DATA_AREA_CHUNKS = 4;
+
+    /** The data slots of the number of chunks that all the beacons of the server load (see {@link DataValues}). */
+    public static final int DATA_SERVER_CHUNKS_LOW = 5;
+
+    public static final int DATA_SERVER_CHUNKS_HIGH = 6;
+
+    /** The data slots of the limit of the server (see {@link DataValues}). */
+    public static final int DATA_LIMIT_LOW = 7;
+
+    public static final int DATA_LIMIT_HIGH = 8;
+
     /** The number of data slots. */
-    public static final int DATA_COUNT = 3;
+    public static final int DATA_COUNT = 9;
 
     /** The index of the slot of the stock. */
     public static final int STOCK_SLOT = 0;
@@ -58,7 +77,7 @@ public final class BeaconFunctionMenu extends AbstractContainerMenu {
     /** The position of the inventory of the player in the screen. */
     public static final int INVENTORY_X = 8;
 
-    public static final int INVENTORY_Y = 146;
+    public static final int INVENTORY_Y = 158;
 
     /** The number of slots of the inventory of the player. */
     private static final int INVENTORY_SLOTS = 36;
@@ -136,6 +155,12 @@ public final class BeaconFunctionMenu extends AbstractContainerMenu {
                     case DATA_FUEL -> level.getBlockEntity(pos) instanceof BeaconBlockEntity beacon
                             ? BeaconStock.fuel(beacon)
                             : 0;
+                    case DATA_CHUNKS -> LoadedChunks.chunksOf(level, pos).size();
+                    case DATA_AREA_CHUNKS -> LoadedChunks.areaChunkCount(level, pos);
+                    case DATA_SERVER_CHUNKS_LOW -> DataValues.low(LoadedChunks.totalLoadedChunks(level));
+                    case DATA_SERVER_CHUNKS_HIGH -> DataValues.high(LoadedChunks.totalLoadedChunks(level));
+                    case DATA_LIMIT_LOW -> DataValues.low(BeaconholdConfig.SERVER.maxLoadedChunks());
+                    case DATA_LIMIT_HIGH -> DataValues.high(BeaconholdConfig.SERVER.maxLoadedChunks());
                     default -> 0;
                 };
             }
@@ -182,6 +207,55 @@ public final class BeaconFunctionMenu extends AbstractContainerMenu {
      */
     public int fuel() {
         return data.get(DATA_FUEL);
+    }
+
+    /**
+     * Tells if the function of the beacon is "loaded chunks".
+     *
+     * @return true if the beacon has the function "loaded chunks"
+     */
+    public boolean hasLoadedChunks() {
+        int index = functionIndex();
+        List<ResourceKey<BeaconFunction>> functions = FunctionList.sorted();
+        return index >= 0
+                && index < functions.size()
+                && functions.get(index).equals(ModFunctions.LOADED_CHUNKS.getKey());
+    }
+
+    /**
+     * Gives the number of chunks that the beacon loads.
+     *
+     * @return the number of chunks
+     */
+    public int loadedChunks() {
+        return data.get(DATA_CHUNKS);
+    }
+
+    /**
+     * Gives the number of chunks that the area of the beacon touches, when the function "loaded chunks" is active.
+     *
+     * @return the number of chunks, or 0 when the function "loaded chunks" is not active
+     */
+    public int areaChunks() {
+        return data.get(DATA_AREA_CHUNKS);
+    }
+
+    /**
+     * Gives the number of chunks that all the beacons of the server load.
+     *
+     * @return the number of chunks
+     */
+    public int serverChunks() {
+        return DataValues.join(data.get(DATA_SERVER_CHUNKS_LOW), data.get(DATA_SERVER_CHUNKS_HIGH));
+    }
+
+    /**
+     * Gives the limit of the server.
+     *
+     * @return the value of the server option {@code loadedChunks.maxLoadedChunks}
+     */
+    public int serverLimit() {
+        return DataValues.join(data.get(DATA_LIMIT_LOW), data.get(DATA_LIMIT_HIGH));
     }
 
     /**
