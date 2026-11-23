@@ -44,20 +44,15 @@ public final class DomeGameTests {
                 .thenSucceed();
     }
 
-    /** The function "loaded chunks" does not use the area of the beacon, so it has no dome. */
+    /** The function "loaded chunks" uses the area of the beacon, so it has a dome. */
     @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_dome_chunks")
-    public static void loadedChunksHasNoDome(GameTestHelper helper) {
+    public static void loadedChunksHasADome(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos beacon = BeaconTestSupport.buildBeacon(helper, 1);
         BeaconholdApi.setFunction(level, beacon, ModFunctions.LOADED_CHUNKS.getKey());
         helper.startSequence()
-                .thenWaitUntil(() -> helper.assertTrue(
-                        BeaconholdApi.activeBeacons(level).stream().anyMatch(b -> b.pos().equals(beacon)),
-                        "The beacon must be active"))
-                .thenExecute(() -> {
-                    helper.assertFalse(hasAnyArea(level, beacon), "Loaded chunks: no dome");
-                    BeaconTestSupport.removeBeacon(helper);
-                })
+                .thenWaitUntil(() -> helper.assertTrue(hasArea(level, beacon, 20), "The dome must have a radius of 20"))
+                .thenExecute(() -> BeaconTestSupport.removeBeacon(helper))
                 .thenSucceed();
     }
 
@@ -70,9 +65,9 @@ public final class DomeGameTests {
         helper.startSequence()
                 .thenWaitUntil(() -> helper.assertTrue(hasArea(level, beacon, 20), "The beacon must be active"))
                 .thenExecute(() -> {
-                    BeaconholdApi.setFunction(level, beacon, ModFunctions.LOADED_CHUNKS.getKey());
+                    BeaconholdApi.setFunction(level, beacon, TestFunctions.NO_AREA);
                     helper.assertTrue(AreaSync.isChanged(level), "A new function must mark the dimension");
-                    helper.assertFalse(hasAnyArea(level, beacon), "Loaded chunks: no dome");
+                    helper.assertFalse(hasAnyArea(level, beacon), "A function with no area: no dome");
                     BeaconTestSupport.removeBeacon(helper);
                 })
                 .thenSucceed();

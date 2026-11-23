@@ -6,72 +6,63 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import javax.annotation.Nullable;
+import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.ChunkPos;
 
 /** The rules of the function "loaded chunks": the chunks of a beacon and the limit of the server. */
 public final class ChunkRules {
-    /** The default numbers of chunks, for the pyramid levels 1 to 4. */
-    private static final int[] DEFAULT_CHUNKS = {1, 5, 9, 13};
-
-    /** The default maximum number of chunks that all the beacons of the server load together. */
-    public static final int DEFAULT_MAX_LOADED_CHUNKS = 256;
+    /**
+     * The default maximum number of chunks that all the beacons of the server load together. A beacon with the pyramid
+     * level 4 loads 144 to 151 chunks, so this value is enough for 3 such beacons.
+     */
+    public static final int DEFAULT_MAX_LOADED_CHUNKS = 512;
 
     private ChunkRules() {
     }
 
     /**
-     * Gives a copy of the default numbers of chunks.
+     * Gives the chunks that the area of a beacon touches, the nearest first.
      *
-     * @return the default numbers of chunks, for the pyramid levels 1 to 4
+     * <p>A chunk is in the list when at least one column of blocks of the chunk is in the area. The order follows the
+     * distance from the chunk of the beacon, then the X coordinate, then the Z coordinate.
+     *
+     * @param x the X coordinate of the beacon
+     * @param z the Z coordinate of the beacon
+     * @param radius the radius of the area in blocks
+     * @return the chunks. A radius under 0 gives no chunk.
      */
-    public static int[] defaultChunks() {
-        return DEFAULT_CHUNKS.clone();
-    }
-
-    /**
-     * Gives the number of chunks for a pyramid level.
-     *
-     * @param pyramidLevel the pyramid level
-     * @param counts the numbers of chunks for the pyramid levels 1 to {@code counts.length}
-     * @return 0 for a pyramid level of 0 or less. The last number for a pyramid level above the last level.
-     */
-    public static int chunkCount(int pyramidLevel, int[] counts) {
-        if (pyramidLevel <= 0 || counts.length == 0) {
-            return 0;
-        }
-        return Math.max(0, counts[Math.min(pyramidLevel, counts.length) - 1]);
-    }
-
-    /**
-     * Gives the chunks nearest to a center chunk, the nearest first.
-     *
-     * <p>The distance is the distance between the chunk coordinates. Chunks at the same distance are in the order of
-     * their X coordinate, then of their Z coordinate.
-     *
-     * @param center the chunk of the beacon
-     * @param count the number of chunks
-     * @return a list of {@code count} chunks. The first chunk is the center.
-     */
-    public static List<ChunkPos> nearestChunks(ChunkPos center, int count) {
-        if (count <= 0) {
+    public static List<ChunkPos> areaChunks(int x, int z, int radius) {
+        if (radius < 0) {
             return List.of();
         }
-        int radius = (int) Math.ceil(Math.sqrt(count)) + 1;
-        List<int[]> offsets = new ArrayList<>();
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-                offsets.add(new int[] {dx, dz});
+        ChunkPos center = new ChunkPos(SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(z));
+        long r2 = (long) radius * radius;
+        List<ChunkPos> result = new ArrayList<>();
+        for (int cx = SectionPos.blockToSectionCoord(x - radius); cx <= SectionPos.blockToSectionCoord(x + radius); cx++) {
+            for (int cz = SectionPos.blockToSectionCoord(z - radius);
+                    cz <= SectionPos.blockToSectionCoord(z + radius);
+                    cz++) {
+                long dx = (long) nearest(x, cx) - x;
+                long dz = (long) nearest(z, cz) - z;
+                if (dx * dx + dz * dz <= r2) {
+                    result.add(new ChunkPos(cx, cz));
+                }
             }
         }
-        offsets.sort(Comparator.<int[]>comparingInt(o -> o[0] * o[0] + o[1] * o[1])
-                .thenComparingInt(o -> o[0])
-                .thenComparingInt(o -> o[1]));
-        List<ChunkPos> result = new ArrayList<>(count);
-        for (int i = 0; i < count; i++) {
-            int[] offset = offsets.get(i);
-            result.add(new ChunkPos(center.x + offset[0], center.z + offset[1]));
-        }
+        result.sort(Comparator.<ChunkPos>comparingInt(c -> square(c.x - center.x) + square(c.z - center.z))
+                .thenComparingInt(c -> c.x)
+                .thenComparingInt(c -> c.z));
         return result;
+    }
+
+    /** Gives the coordinate of the chunk that is nearest to a block coordinate. */
+    private static int nearest(int block, int chunk) {
+        int min = SectionPos.sectionToBlockCoord(chunk);
+        return Math.max(min, Math.min(block, min + 15));
+    }
+
+    private static int square(int value) {
+        return value * value;
     }
 
     /**

@@ -14,70 +14,90 @@ import org.junit.jupiter.api.Test;
 class ChunkRulesTest {
     private static final ChunkPos CENTER = new ChunkPos(10, -4);
 
+    /** The radii of the area for the pyramid levels 1 to 4. */
+    private static final int[] RADII = {20, 47, 73, 100};
+
+    /** The smallest and the largest numbers of chunks for each pyramid level, for all the positions in a chunk. */
+    private static final int[][] COUNTS = {{9, 13}, {36, 41}, {81, 88}, {144, 151}};
+
     @Test
-    void defaultCountsGoUpTo13() {
-        int[] counts = ChunkRules.defaultChunks();
-        assertEquals(0, ChunkRules.chunkCount(0, counts));
-        assertEquals(1, ChunkRules.chunkCount(1, counts));
-        assertEquals(5, ChunkRules.chunkCount(2, counts));
-        assertEquals(9, ChunkRules.chunkCount(3, counts));
-        assertEquals(13, ChunkRules.chunkCount(4, counts));
-        assertEquals(13, ChunkRules.chunkCount(5, counts));
+    void chunkCountsForEachPyramidLevel() {
+        for (int level = 0; level < RADII.length; level++) {
+            int min = Integer.MAX_VALUE;
+            int max = 0;
+            for (int x = 0; x < 16; x++) {
+                for (int z = 0; z < 16; z++) {
+                    int count = ChunkRules.areaChunks(x, z, RADII[level]).size();
+                    min = Math.min(min, count);
+                    max = Math.max(max, count);
+                }
+            }
+            assertEquals(COUNTS[level][0], min, "Minimum for the level " + (level + 1));
+            assertEquals(COUNTS[level][1], max, "Maximum for the level " + (level + 1));
+        }
+    }
+
+    @Test
+    void beaconInTheCenterOfAChunk() {
+        assertEquals(9, ChunkRules.areaChunks(8, 8, 20).size());
+        assertEquals(145, ChunkRules.areaChunks(8, 8, 100).size());
+    }
+
+    @Test
+    void defaultLimitHoldsThreeBeaconsOfLevel4() {
+        assertTrue(ChunkRules.DEFAULT_MAX_LOADED_CHUNKS >= 3 * COUNTS[3][1]);
+        assertTrue(ChunkRules.DEFAULT_MAX_LOADED_CHUNKS < 4 * COUNTS[3][0]);
     }
 
     @Test
     void firstChunkIsTheChunkOfTheBeacon() {
-        assertEquals(List.of(CENTER), ChunkRules.nearestChunks(CENTER, 1));
+        int x = CENTER.getMinBlockX() + 3;
+        int z = CENTER.getMinBlockZ() + 12;
+        assertEquals(CENTER, ChunkRules.areaChunks(x, z, 47).get(0));
+        assertEquals(List.of(CENTER), ChunkRules.areaChunks(x, z, 0));
     }
 
     @Test
-    void fiveChunksMakeACross() {
-        assertEquals(
-                Set.of(CENTER, offset(-1, 0), offset(1, 0), offset(0, -1), offset(0, 1)),
-                new HashSet<>(ChunkRules.nearestChunks(CENTER, 5)));
-    }
-
-    @Test
-    void nineChunksMakeASquare() {
-        Set<ChunkPos> square = new HashSet<>();
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                square.add(offset(dx, dz));
+    void chunksAreTheChunksThatTheAreaTouches() {
+        int x = CENTER.getMinBlockX() + 5;
+        int z = CENTER.getMinBlockZ() + 14;
+        int radius = 47;
+        Set<ChunkPos> chunks = new HashSet<>(ChunkRules.areaChunks(x, z, radius));
+        for (int cx = CENTER.x - 5; cx <= CENTER.x + 5; cx++) {
+            for (int cz = CENTER.z - 5; cz <= CENTER.z + 5; cz++) {
+                ChunkPos chunk = new ChunkPos(cx, cz);
+                boolean touched = false;
+                for (int bx = chunk.getMinBlockX(); bx <= chunk.getMaxBlockX() && !touched; bx++) {
+                    for (int bz = chunk.getMinBlockZ(); bz <= chunk.getMaxBlockZ() && !touched; bz++) {
+                        touched = (long) (bx - x) * (bx - x) + (long) (bz - z) * (bz - z) <= (long) radius * radius;
+                    }
+                }
+                assertEquals(touched, chunks.contains(chunk), chunk.toString());
             }
         }
-        assertEquals(square, new HashSet<>(ChunkRules.nearestChunks(CENTER, 9)));
-    }
-
-    @Test
-    void thirteenChunksMakeACircleOfRadius2() {
-        Set<ChunkPos> circle = new HashSet<>(ChunkRules.nearestChunks(CENTER, 9));
-        circle.addAll(List.of(offset(-2, 0), offset(2, 0), offset(0, -2), offset(0, 2)));
-        assertEquals(circle, new HashSet<>(ChunkRules.nearestChunks(CENTER, 13)));
     }
 
     @Test
     void chunksAreInTheOrderOfTheDistance() {
-        List<ChunkPos> chunks = ChunkRules.nearestChunks(CENTER, 49);
-        assertEquals(49, chunks.size());
-        assertEquals(49, new HashSet<>(chunks).size());
-        int last = 0;
+        List<ChunkPos> chunks = ChunkRules.areaChunks(CENTER.getMinBlockX(), CENTER.getMinBlockZ(), 100);
+        assertEquals(chunks.size(), new HashSet<>(chunks).size());
+        int last = -1;
         for (ChunkPos chunk : chunks) {
-            int dx = chunk.x - CENTER.x;
-            int dz = chunk.z - CENTER.z;
-            int distance = dx * dx + dz * dz;
+            int distance = (chunk.x - CENTER.x) * (chunk.x - CENTER.x) + (chunk.z - CENTER.z) * (chunk.z - CENTER.z);
             assertTrue(distance >= last, "The order must follow the distance");
             last = distance;
         }
     }
 
     @Test
-    void noChunkForACountOfZero() {
-        assertTrue(ChunkRules.nearestChunks(CENTER, 0).isEmpty());
+    void negativeRadiusGivesNoChunk() {
+        assertTrue(ChunkRules.areaChunks(0, 0, -1).isEmpty());
     }
 
     @Test
     void limitOfTheServerReducesTheChunks() {
         assertEquals(13, ChunkRules.allowedChunks(13, 0, 256));
+        assertEquals(151, ChunkRules.allowedChunks(151, 0, ChunkRules.DEFAULT_MAX_LOADED_CHUNKS));
         assertEquals(3, ChunkRules.allowedChunks(13, 253, 256));
         assertEquals(0, ChunkRules.allowedChunks(13, 256, 256));
         assertEquals(0, ChunkRules.allowedChunks(13, 300, 256));

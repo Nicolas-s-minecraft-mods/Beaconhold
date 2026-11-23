@@ -22,6 +22,11 @@ public final class TestFunctions {
     public static final ResourceKey<BeaconFunction> TEST = ResourceKey.create(
             BeaconholdApi.FUNCTION_REGISTRY_KEY, ResourceLocation.fromNamespaceAndPath(Beaconhold.MOD_ID, "test"));
 
+    /** A function with no effect and no energy dome. Only the GameTests use it. */
+    public static final ResourceKey<BeaconFunction> NO_AREA = ResourceKey.create(
+            BeaconholdApi.FUNCTION_REGISTRY_KEY,
+            ResourceLocation.fromNamespaceAndPath(Beaconhold.MOD_ID, "test_no_area"));
+
     private static final List<BeaconFunctionEvent> EVENTS = new ArrayList<>();
 
     static {
@@ -34,8 +39,12 @@ public final class TestFunctions {
 
     @SubscribeEvent
     static void register(RegisterEvent event) {
-        event.register(BeaconholdApi.FUNCTION_REGISTRY_KEY, helper -> helper.register(
-                TEST, BeaconFunction.builder().icon(() -> Items.STONE).build()));
+        event.register(BeaconholdApi.FUNCTION_REGISTRY_KEY, helper -> {
+            helper.register(TEST, BeaconFunction.builder().icon(() -> Items.STONE).build());
+            helper.register(
+                    NO_AREA,
+                    BeaconFunction.builder().icon(() -> Items.DIRT).showsArea(false).build());
+        });
     }
 
     private static synchronized void record(BeaconFunctionEvent event) {
