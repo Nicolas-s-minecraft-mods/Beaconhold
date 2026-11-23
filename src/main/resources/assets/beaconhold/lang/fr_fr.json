@@ -43,7 +43,7 @@
   "beaconhold.name": "Beaconhold",
   "commands.beaconhold.function.clear": "La balise en %s n'a plus de fonction.",
   "commands.beaconhold.function.get.active": "La balise en %s a la fonction %s. La fonction est active : niveau de pyramide %s, rayon de %s blocs.",
-  "commands.beaconhold.function.get.inactive": "La balise en %s a la fonction %s. La fonction n'est pas active : le faisceau est bloqué ou la pyramide n'est pas complète.",
+  "commands.beaconhold.function.get.inactive": "La balise en %s a la fonction %s. La fonction n'est pas active : un bloc arrête le faisceau, la pyramide n'est pas complète, ou la balise n'a pas de consommable.",
   "commands.beaconhold.function.get.none": "La balise en %s n'a pas de fonction.",
   "commands.beaconhold.function.no_beacon": "Il n'y a pas de balise en %s.",
   "commands.beaconhold.function.set": "La balise en %s a maintenant la fonction %s.",
@@ -52,11 +52,16 @@
   "fml.menu.mods.info.description.beaconhold": "Plus de fonctions pour la balise, et une API pour que d'autres mods ajoutent des fonctions à la balise.",
   "screen.beaconhold.functions.back": "Retour",
   "screen.beaconhold.functions.cost": "Coût : 1 consommable toutes les %s min %s s.",
+  "screen.beaconhold.functions.cost.short": "%s min %s s par objet",
   "screen.beaconhold.functions.cost.stack": "Une pile de %s objets dure environ %s jours de jeu.",
   "screen.beaconhold.functions.none": "Aucune fonction",
   "screen.beaconhold.functions.none.tooltip": "Retire la fonction de la balise. La balise garde ses pouvoirs de base.",
   "screen.beaconhold.functions.open": "Fonctions",
   "screen.beaconhold.functions.state.active": "La fonction est active.",
   "screen.beaconhold.functions.state.inactive": "La fonction n'est pas active.",
-  "screen.beaconhold.functions.state.none": "La balise n'a pas de fonction."
+  "screen.beaconhold.functions.state.none": "La balise n'a pas de fonction.",
+  "screen.beaconhold.functions.stock": "Stock : %s jours de jeu",
+  "screen.beaconhold.functions.stock.accepts": "Mettez une pile d'un de ces objets :",
+  "screen.beaconhold.functions.stock.empty": "Stock : vide",
+  "screen.beaconhold.functions.stock.low": "Stock bas : %s jours de jeu"
 }

@@ -1,10 +1,12 @@
 package io.github.nicolasgoyon.beaconhold.registry;
 
+import com.mojang.serialization.Codec;
 import io.github.nicolasgoyon.beaconhold.api.BeaconFunction;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
 import java.util.function.Supplier;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -26,6 +28,27 @@ public final class ModRegistries {
             "function",
             () -> AttachmentType.builder(() -> ResourceLocation.withDefaultNamespace("air"))
                     .serialize(ResourceLocation.CODEC)
+                    .build());
+
+    /** The stock of the consumable of a beacon: one stack. The beacon saves it. */
+    public static final Supplier<AttachmentType<ItemStack>> BEACON_STOCK = ATTACHMENTS.register(
+            "stock",
+            () -> AttachmentType.builder(() -> ItemStack.EMPTY)
+                    .serialize(ItemStack.OPTIONAL_CODEC, stack -> !stack.isEmpty())
+                    .build());
+
+    /** The fuel of a beacon: the number of ticks that the last consumable item still gives. The beacon saves it. */
+    public static final Supplier<AttachmentType<Integer>> BEACON_FUEL = ATTACHMENTS.register(
+            "fuel",
+            () -> AttachmentType.builder(() -> 0)
+                    .serialize(Codec.INT, fuel -> fuel != 0)
+                    .build());
+
+    /** The game time of the last update of the fuel of a beacon. The beacon saves it. */
+    public static final Supplier<AttachmentType<Long>> BEACON_FUEL_TICK = ATTACHMENTS.register(
+            "fuel_tick",
+            () -> AttachmentType.builder(() -> 0L)
+                    .serialize(Codec.LONG, tick -> tick != 0L)
                     .build());
 
     private ModRegistries() {

@@ -43,7 +43,7 @@
   "beaconhold.name": "Beaconhold",
   "commands.beaconhold.function.clear": "The beacon at %s has no function now.",
   "commands.beaconhold.function.get.active": "The beacon at %s has the function %s. The function is active: pyramid level %s, radius %s blocks.",
-  "commands.beaconhold.function.get.inactive": "The beacon at %s has the function %s. The function is not active: a block stops the beam, or the pyramid is not complete.",
+  "commands.beaconhold.function.get.inactive": "The beacon at %s has the function %s. The function is not active: a block stops the beam, the pyramid is not complete, or the beacon has no consumable.",
   "commands.beaconhold.function.get.none": "The beacon at %s has no function.",
   "commands.beaconhold.function.no_beacon": "There is no beacon at %s.",
   "commands.beaconhold.function.set": "The beacon at %s has the function %s now.",
@@ -52,11 +52,16 @@
   "fml.menu.mods.info.description.beaconhold": "More functions for the beacon, and an API so that other mods add functions to the beacon.",
   "screen.beaconhold.functions.back": "Back",
   "screen.beaconhold.functions.cost": "Cost: 1 consumable item every %s min %s s.",
+  "screen.beaconhold.functions.cost.short": "%s min %s s for each item",
   "screen.beaconhold.functions.cost.stack": "A stack of %s items lasts about %s game days.",
   "screen.beaconhold.functions.none": "No function",
   "screen.beaconhold.functions.none.tooltip": "Remove the function of the beacon. The beacon keeps its vanilla powers.",
   "screen.beaconhold.functions.open": "Functions",
   "screen.beaconhold.functions.state.active": "The function is active.",
   "screen.beaconhold.functions.state.inactive": "The function is not active.",
-  "screen.beaconhold.functions.state.none": "The beacon has no function."
+  "screen.beaconhold.functions.state.none": "The beacon has no function.",
+  "screen.beaconhold.functions.stock": "Stock: %s game days",
+  "screen.beaconhold.functions.stock.accepts": "Put one stack of one of these items:",
+  "screen.beaconhold.functions.stock.empty": "Stock: empty",
+  "screen.beaconhold.functions.stock.low": "Low stock: %s game days"
 }

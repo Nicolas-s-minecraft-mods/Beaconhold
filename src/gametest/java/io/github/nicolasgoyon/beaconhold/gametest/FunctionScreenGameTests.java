@@ -49,7 +49,7 @@ public final class FunctionScreenGameTests {
         ServerLevel level = helper.getLevel();
         BlockPos beacon = BeaconTestSupport.buildBeacon(helper, 1);
         Player player = playerAt(helper, BeaconTestSupport.BEACON.east(2));
-        BeaconFunctionMenu menu = BeaconFunctionMenu.server(0, level, beacon, 3750);
+        BeaconFunctionMenu menu = BeaconFunctionMenu.server(0, player.getInventory(), level, beacon, 3750);
         helper.assertTrue(menu.functionIndex() == -1, "No function at the start");
 
         helper.assertTrue(menu.clickMenuButton(player, buttonOf(ModFunctions.NO_HOSTILE_SPAWNS.getKey())), "Click");
@@ -80,7 +80,7 @@ public final class FunctionScreenGameTests {
         BlockPos beacon = BeaconTestSupport.buildBeacon(helper, 1);
         Player player = playerAt(helper, BeaconTestSupport.BEACON.east(2));
         BeaconholdApi.setFunction(level, beacon, ModFunctions.NO_HOSTILE_SPAWNS.getKey());
-        BeaconFunctionMenu menu = BeaconFunctionMenu.server(0, level, beacon, 3750);
+        BeaconFunctionMenu menu = BeaconFunctionMenu.server(0, player.getInventory(), level, beacon, 3750);
         int outside = FunctionButtons.buttonOf(FunctionList.sorted().size());
         helper.assertFalse(menu.clickMenuButton(player, outside), "The server refuses the button");
         helper.assertFalse(menu.clickMenuButton(player, -5), "The server refuses a negative button");
@@ -97,7 +97,7 @@ public final class FunctionScreenGameTests {
         ServerLevel level = helper.getLevel();
         BlockPos beacon = BeaconTestSupport.buildBeacon(helper, 1);
         Player player = playerAt(helper, BeaconTestSupport.BEACON.east(2));
-        BeaconFunctionMenu menu = BeaconFunctionMenu.server(0, level, beacon, 3750);
+        BeaconFunctionMenu menu = BeaconFunctionMenu.server(0, player.getInventory(), level, beacon, 3750);
         menu.clickMenuButton(player, buttonOf(TestFunctions.TEST));
         helper.startSequence()
                 .thenWaitUntil(() -> helper.assertTrue(menu.isActive(), "The function must be active"))
@@ -112,8 +112,8 @@ public final class FunctionScreenGameTests {
     public static void menuNeedsTheBeaconNear(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos beacon = BeaconTestSupport.buildBeacon(helper, 1);
-        BeaconFunctionMenu menu = BeaconFunctionMenu.server(0, level, beacon, 3750);
         Player near = playerAt(helper, BeaconTestSupport.BEACON.east(2));
+        BeaconFunctionMenu menu = BeaconFunctionMenu.server(0, near.getInventory(), level, beacon, 3750);
         helper.assertTrue(menu.stillValid(near), "A player near the beacon");
         Player far = playerAt(helper, BeaconTestSupport.BEACON.east(2));
         far.setPos(beacon.getX() + 20.5, beacon.getY(), beacon.getZ() + 0.5);

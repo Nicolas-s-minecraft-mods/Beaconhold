@@ -6,6 +6,7 @@ import io.github.nicolasgoyon.beaconhold.api.BeaconFunction;
 import io.github.nicolasgoyon.beaconhold.api.BeaconFunctionEvent;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
+import io.github.nicolasgoyon.beaconhold.cost.BeaconStock;
 import io.github.nicolasgoyon.beaconhold.mixin.BeaconBlockEntityAccessor;
 import io.github.nicolasgoyon.beaconhold.network.AreaSync;
 import io.github.nicolasgoyon.beaconhold.registry.ModRegistries;
@@ -26,8 +27,9 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 /**
  * Keeps the saved list of the beacons with a function, and posts the events of the changes.
  *
- * <p>Each beacon updates its record each {@link #UPDATE_INTERVAL} ticks, in the same tick as its vanilla powers. The
- * dimension also removes the records of the loaded positions that have no beacon.
+ * <p>Each beacon updates its record each {@link #UPDATE_INTERVAL} ticks, in the same tick as its vanilla powers. At each
+ * update, an operating beacon uses its stock of the consumable. The dimension also removes the records of the loaded
+ * positions that have no beacon.
  */
 public final class BeaconTracker {
     /** The number of ticks between two updates of a beacon. The game uses the same interval for the beacon powers. */
@@ -51,19 +53,32 @@ public final class BeaconTracker {
     }
 
     /**
-     * Updates the record of a beacon from its block entity.
+     * Updates the record of a beacon from its block entity, out of the interval of the updates.
      *
      * @param level the dimension of the beacon
      * @param beacon the block entity of the beacon
      */
     public static void update(ServerLevel level, BeaconBlockEntity beacon) {
+        update(level, beacon, false);
+    }
+
+    /**
+     * Updates the record of a beacon from its block entity, and uses its stock of the consumable.
+     *
+     * @param level the dimension of the beacon
+     * @param beacon the block entity of the beacon
+     * @param periodic true for the update at the interval of the vanilla powers
+     */
+    public static void update(ServerLevel level, BeaconBlockEntity beacon, boolean periodic) {
         BlockPos pos = beacon.getBlockPos();
         BeaconSavedData data = BeaconSavedData.get(level);
         BeaconRecord before = data.get(pos);
         BeaconRecord after = readFunction(beacon)
                 .map(function -> {
                     int pyramidLevel = ((BeaconBlockEntityAccessor) beacon).getBeaconholdLevels();
-                    boolean active = pyramidLevel > 0 && !beacon.getBeamSections().isEmpty();
+                    boolean canOperate = pyramidLevel > 0 && !beacon.getBeamSections().isEmpty();
+                    boolean wasActive = before != null && before.active();
+                    boolean active = BeaconStock.operate(level, beacon, wasActive, canOperate, periodic);
                     return new BeaconRecord(pos, pyramidLevel, active, function.location());
                 })
                 .orElse(null);
