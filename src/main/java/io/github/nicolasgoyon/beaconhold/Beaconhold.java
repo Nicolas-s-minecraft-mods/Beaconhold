@@ -5,6 +5,8 @@ import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
 import io.github.nicolasgoyon.beaconhold.command.BeaconholdCommand;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
+import io.github.nicolasgoyon.beaconhold.function.ModFunctions;
+import io.github.nicolasgoyon.beaconhold.function.NoHostileSpawns;
 import io.github.nicolasgoyon.beaconhold.registry.ModRegistries;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -24,7 +26,9 @@ public final class Beaconhold {
         LOGGER.debug("{} {} starts", MOD_ID, container.getModInfo().getVersion());
         container.registerConfig(ModConfig.Type.SERVER, BeaconholdConfig.SERVER_SPEC);
         ModRegistries.register(modEventBus);
+        ModFunctions.register(modEventBus);
         BeaconTracker.register();
         BeaconholdCommand.register();
+        NoHostileSpawns.register();
     }
 }

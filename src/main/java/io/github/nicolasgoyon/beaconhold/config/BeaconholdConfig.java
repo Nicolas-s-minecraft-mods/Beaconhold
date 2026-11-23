@@ -25,6 +25,9 @@ public final class BeaconholdConfig {
         /** The radius of the area in blocks, for the pyramid levels 1 to 4. */
         private final ModConfigSpec.IntValue[] radii;
 
+        /** True if the function "no hostile spawns" also stops the monster spawners. */
+        private final ModConfigSpec.BooleanValue blockSpawners;
+
         Server(ModConfigSpec.Builder builder) {
             builder.comment("The area of the beacon functions: a vertical cylinder around the beacon.")
                     .translation(key("area"))
@@ -38,6 +41,33 @@ public final class BeaconholdConfig {
                         .defineInRange(name, defaults[i], 1, AreaRadii.MAX_RADIUS);
             }
             builder.pop();
+
+            builder.comment("The function \"no hostile spawns\".")
+                    .translation(key("noHostileSpawns"))
+                    .push("noHostileSpawns");
+            blockSpawners = builder.comment(
+                            "True: the function also stops the spawns of the monster spawners in its area.")
+                    .translation(key("blockSpawners"))
+                    .define("blockSpawners", false);
+            builder.pop();
+        }
+
+        /**
+         * Tells if the function "no hostile spawns" also stops the monster spawners.
+         *
+         * @return the value of the option {@code noHostileSpawns.blockSpawners}
+         */
+        public boolean blockSpawners() {
+            return blockSpawners.getAsBoolean();
+        }
+
+        /**
+         * Sets the option {@code noHostileSpawns.blockSpawners}. The GameTests use this method.
+         *
+         * @param value the new value
+         */
+        public void setBlockSpawners(boolean value) {
+            blockSpawners.set(value);
         }
 
         /**

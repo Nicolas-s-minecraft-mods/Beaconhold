@@ -4,7 +4,7 @@ Beaconhold is a mod for Minecraft 1.21.1 (NeoForge). It gives more functions to 
 
 ## State
 
-The mod has the API for other mods, the area of a beacon and the command for the operators. It has no function of its own yet. This document gives the rules of the mod. Each rule that is not in the code yet has the mark **planned** and the number of its issue.
+The mod has the API for other mods, the area of a beacon and the command for the operators. It has the function "no hostile spawns". This document gives the rules of the mod. Each rule that is not in the code yet has the mark **planned** and the number of its issue.
 
 ## Terms
 
@@ -28,8 +28,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
 
 ### No hostile spawns
 
-**Planned** (#4).
-
+- The id of the function is `beaconhold:no_hostile_spawns`.
 - A hostile mob does not spawn in the area of an active beacon with this function.
 - A hostile mob is a mob of the `monster` category of the game. Examples: zombie, skeleton, creeper, spider, phantom, slime.
 - The function stops these spawns:
@@ -146,7 +145,7 @@ The server options are in `serverconfig/beaconhold-server.toml` in the world fol
 | Option | Side | Default | Issue |
 |---|---|---|---|
 | `area.radiusLevel1` to `area.radiusLevel4` | server | 20, 47, 73, 100 | #6 |
-| `noHostileSpawns.blockSpawners` | server | off | #4 (planned) |
+| `noHostileSpawns.blockSpawners` | server | off | #4 |
 | `loadedChunks.chunksLevel1` to `loadedChunks.chunksLevel4` | server | 1, 5, 9, 13 | #5 (planned) |
 | `loadedChunks.maxLoadedChunks` | server | 256 | #5 (planned) |
 | `consumables` | server | amethyst shard, prismarine crystals, nether quartz | #8 (planned) |

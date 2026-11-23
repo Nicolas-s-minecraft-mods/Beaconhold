@@ -1,6 +1,11 @@
 {
+  "beacon_function.beaconhold.no_hostile_spawns": "No hostile spawns",
   "beaconhold.configuration.area": "Area",
   "beaconhold.configuration.area.tooltip": "The area of the beacon functions: a vertical cylinder around the beacon.",
+  "beaconhold.configuration.blockSpawners": "Stop the monster spawners",
+  "beaconhold.configuration.blockSpawners.tooltip": "On: the function also stops the spawns of the monster spawners in its area. The function does not stop the patrols, the raids and the trial spawners.",
+  "beaconhold.configuration.noHostileSpawns": "No hostile spawns",
+  "beaconhold.configuration.noHostileSpawns.tooltip": "The function \"no hostile spawns\".",
   "beaconhold.configuration.radiusLevel1": "Radius, pyramid level 1",
   "beaconhold.configuration.radiusLevel1.tooltip": "The radius of the area, in blocks, for a pyramid level of 1.",
   "beaconhold.configuration.radiusLevel2": "Radius, pyramid level 2",
