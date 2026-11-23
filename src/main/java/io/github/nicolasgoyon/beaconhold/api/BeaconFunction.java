@@ -29,9 +29,11 @@ import net.minecraft.world.level.ItemLike;
  */
 public final class BeaconFunction {
     private final Supplier<? extends ItemLike> icon;
+    private final boolean showsArea;
 
     private BeaconFunction(Builder builder) {
         this.icon = builder.icon;
+        this.showsArea = builder.showsArea;
     }
 
     /**
@@ -50,6 +52,15 @@ public final class BeaconFunction {
      */
     public ItemStack icon() {
         return new ItemStack(icon.get());
+    }
+
+    /**
+     * Tells if the clients show the area of an active beacon with this function as an energy dome.
+     *
+     * @return true if the clients show the area. The default value is true.
+     */
+    public boolean showsArea() {
+        return showsArea;
     }
 
     /**
@@ -75,6 +86,7 @@ public final class BeaconFunction {
     /** A builder of a {@link BeaconFunction}. */
     public static final class Builder {
         private Supplier<? extends ItemLike> icon = () -> Items.BEACON;
+        private boolean showsArea = true;
 
         private Builder() {
         }
@@ -87,6 +99,18 @@ public final class BeaconFunction {
          */
         public Builder icon(Supplier<? extends ItemLike> icon) {
             this.icon = Objects.requireNonNull(icon, "icon");
+            return this;
+        }
+
+        /**
+         * Sets if the clients show the area of an active beacon with this function as an energy dome. Use false for a
+         * function that does not use the area of the beacon.
+         *
+         * @param showsArea true to show the area. The default value is true.
+         * @return this builder
+         */
+        public Builder showsArea(boolean showsArea) {
+            this.showsArea = showsArea;
             return this;
         }
 

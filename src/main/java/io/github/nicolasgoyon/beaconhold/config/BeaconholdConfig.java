@@ -4,13 +4,22 @@ import io.github.nicolasgoyon.beaconhold.function.ChunkRules;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
-/** The options of the mod. The server options are in the file {@code serverconfig/beaconhold-server.toml}. */
+/**
+ * The options of the mod. The server options are in the file {@code serverconfig/beaconhold-server.toml} of the world.
+ * The client options are in the file {@code config/beaconhold-client.toml}.
+ */
 public final class BeaconholdConfig {
     /** The specification of the server options. */
     public static final ModConfigSpec SERVER_SPEC;
 
     /** The server options. */
     public static final Server SERVER;
+
+    /** The specification of the client options. */
+    public static final ModConfigSpec CLIENT_SPEC;
+
+    /** The client options. */
+    public static final Client CLIENT;
 
     /** The maximum number of chunks for one beacon that the options accept. */
     private static final int MAX_CHUNKS_PER_BEACON = 81;
@@ -22,6 +31,9 @@ public final class BeaconholdConfig {
         Pair<Server, ModConfigSpec> pair = new ModConfigSpec.Builder().configure(Server::new);
         SERVER = pair.getLeft();
         SERVER_SPEC = pair.getRight();
+        Pair<Client, ModConfigSpec> clientPair = new ModConfigSpec.Builder().configure(Client::new);
+        CLIENT = clientPair.getLeft();
+        CLIENT_SPEC = clientPair.getRight();
     }
 
     private BeaconholdConfig() {
@@ -145,6 +157,31 @@ public final class BeaconholdConfig {
                 values[i] = radii[i].getAsInt();
             }
             return AreaRadii.radius(pyramidLevel, values);
+        }
+    }
+
+    /** The client options. */
+    public static final class Client {
+        /** True if the client shows the energy domes of the active beacons. */
+        private final ModConfigSpec.BooleanValue domeEnabled;
+
+        Client(ModConfigSpec.Builder builder) {
+            builder.comment("The energy dome: the visual of the area of an active beacon.")
+                    .translation(key("dome"))
+                    .push("dome");
+            domeEnabled = builder.comment("True: the client shows the energy domes. False: the client shows no dome.")
+                    .translation(key("domeEnabled"))
+                    .define("enabled", true);
+            builder.pop();
+        }
+
+        /**
+         * Tells if the client shows the energy domes.
+         *
+         * @return the value of the option {@code dome.enabled}
+         */
+        public boolean domeEnabled() {
+            return domeEnabled.getAsBoolean();
         }
     }
 

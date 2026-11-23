@@ -8,6 +8,7 @@ import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import io.github.nicolasgoyon.beaconhold.function.LoadedChunks;
 import io.github.nicolasgoyon.beaconhold.function.ModFunctions;
 import io.github.nicolasgoyon.beaconhold.function.NoHostileSpawns;
+import io.github.nicolasgoyon.beaconhold.network.ModNetwork;
 import io.github.nicolasgoyon.beaconhold.registry.ModRegistries;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -32,5 +33,6 @@ public final class Beaconhold {
         BeaconholdCommand.register();
         NoHostileSpawns.register();
         LoadedChunks.register(modEventBus);
+        ModNetwork.register(modEventBus);
     }
 }

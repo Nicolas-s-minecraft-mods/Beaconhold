@@ -54,6 +54,8 @@ public final class ExampleFunctions {
 ExampleFunctions.FUNCTIONS.register(modEventBus);
 ```
 
+The clients show the area of an active beacon as an energy dome. For a function that does not use the area of the beacon, call `showsArea(false)` on the builder. Then the clients show no dome for this function.
+
 Add the name of the function to the language files of your mod. The key is `beacon_function.<namespace>.<path>`:
 
 ```json

@@ -4,7 +4,7 @@ Beaconhold is a mod for Minecraft 1.21.1 (NeoForge). It gives more functions to 
 
 ## State
 
-The mod has the API for other mods, the area of a beacon and the command for the operators. It has the functions "no hostile spawns" and "loaded chunks". This document gives the rules of the mod. Each rule that is not in the code yet has the mark **planned** and the number of its issue.
+The mod has the API for other mods, the area of a beacon, the command for the operators and the energy dome. It has the functions "no hostile spawns" and "loaded chunks". This document gives the rules of the mod. Each rule that is not in the code yet has the mark **planned** and the number of its issue.
 
 ## Terms
 
@@ -130,14 +130,15 @@ The API is for other mods. [api.md](api.md) gives the dependency and examples. F
 
 ## Visual
 
-**Planned** (#9).
-
-- The area of an active function shows as a light energy dome.
-- From far, the dome is a faint veil on the edge of the area.
-- From near, the dome shows rings with particles. It is not a wall, and the player sees through it.
-- The dome fades with the distance.
-- A client option turns the dome off.
-- The owner of the project selects the look from previews.
+- The area of an active function shows as a light energy dome. The dome is on the edge of the area: a vertical circle around the beacon.
+- From far, the dome is a faint veil. The veil goes 96 blocks above and below the eyes of the player, and it fades at its top and its bottom.
+- Near the edge, the veil fades out. The dome shows a ring of light on the ground, with particles. It is not a wall, and the player sees through it.
+- The veil fades with the distance. At 256 blocks from the edge, the client does not show the dome.
+- In a cave, more than 6 blocks under the ground, the ring is at the level of the feet of the player.
+- The color of the dome is a light cyan.
+- The function "loaded chunks" has no dome, because its chunks are not the area of the beacon. A function of another mod can also have no dome (see [api.md](api.md)).
+- The server sends the areas of the active beacons of a dimension to the players in this dimension. It sends them when a function starts or stops, and when a player enters the dimension.
+- The client option `dome.enabled` turns the dome off.
 
 ## Options
 
@@ -150,7 +151,7 @@ The server options are in `serverconfig/beaconhold-server.toml` in the world fol
 | `loadedChunks.chunksLevel1` to `loadedChunks.chunksLevel4` | server | 1, 5, 9, 13 | #5 |
 | `loadedChunks.maxLoadedChunks` | server | 256 | #5 |
 | `consumables` | server | amethyst shard, prismarine crystals, nether quartz | #8 (planned) |
-| `dome.enabled` | client | on | #9 (planned) |
+| `dome.enabled` | client | on | #9 |
 
 ## Open questions
 
