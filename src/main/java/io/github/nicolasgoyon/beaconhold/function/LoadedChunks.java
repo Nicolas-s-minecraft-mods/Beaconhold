@@ -64,8 +64,8 @@ public final class LoadedChunks {
     private static void load(ServerLevel level, ActiveBeacon beacon) {
         release(level, beacon.pos());
         BeaconholdConfig.Server config = BeaconholdConfig.SERVER;
-        List<ChunkPos> wanted =
-                ChunkRules.nearestChunks(new ChunkPos(beacon.pos()), config.chunkCount(beacon.pyramidLevel()));
+        List<ChunkPos> wanted = ChunkRules.areaChunks(
+                beacon.pos().getX(), beacon.pos().getZ(), beacon.area().radius());
         int allowed = ChunkRules.allowedChunks(wanted.size(), totalLoadedChunks(level), config.maxLoadedChunks());
         LongSet chunks = new LongOpenHashSet();
         for (ChunkPos chunk : wanted.subList(0, allowed)) {

@@ -22,11 +22,8 @@ public final class BeaconholdConfig {
     /** The client options. */
     public static final Client CLIENT;
 
-    /** The maximum number of chunks for one beacon that the options accept. */
-    private static final int MAX_CHUNKS_PER_BEACON = 81;
-
     /** The maximum value of the limit of the server that the options accept. */
-    private static final int MAX_LOADED_CHUNKS = 100_000;
+    public static final int MAX_LOADED_CHUNKS = 100_000;
 
     static {
         Pair<Server, ModConfigSpec> pair = new ModConfigSpec.Builder().configure(Server::new);
@@ -47,9 +44,6 @@ public final class BeaconholdConfig {
 
         /** True if the function "no hostile spawns" also stops the monster spawners. */
         private final ModConfigSpec.BooleanValue blockSpawners;
-
-        /** The number of chunks that the function "loaded chunks" loads, for the pyramid levels 1 to 4. */
-        private final ModConfigSpec.IntValue[] chunkCounts;
 
         /** The maximum number of chunks that all the beacons of the server load together. */
         private final ModConfigSpec.IntValue maxLoadedChunks;
@@ -83,17 +77,9 @@ public final class BeaconholdConfig {
             builder.comment("The function \"loaded chunks\".")
                     .translation(key("loadedChunks"))
                     .push("loadedChunks");
-            int[] chunkDefaults = ChunkRules.defaultChunks();
-            chunkCounts = new ModConfigSpec.IntValue[chunkDefaults.length];
-            for (int i = 0; i < chunkDefaults.length; i++) {
-                String name = "chunksLevel" + (i + 1);
-                chunkCounts[i] = builder.comment("The number of chunks that a beacon loads for the pyramid level "
-                                + (i + 1) + ". The beacon loads its own chunk first, then the nearest chunks.")
-                        .translation(key(name))
-                        .defineInRange(name, chunkDefaults[i], 0, MAX_CHUNKS_PER_BEACON);
-            }
-            maxLoadedChunks = builder.comment(
-                            "The maximum number of chunks that all the beacons of the server load together.")
+            maxLoadedChunks = builder.comment("The maximum number of chunks that all the beacons of the server load "
+                            + "together. A beacon loads the chunks that its area touches. The command "
+                            + "/beaconhold chunks limit shows and sets this value.")
                     .translation(key("maxLoadedChunks"))
                     .defineInRange("maxLoadedChunks", ChunkRules.DEFAULT_MAX_LOADED_CHUNKS, 0, MAX_LOADED_CHUNKS);
             builder.pop();
@@ -129,20 +115,6 @@ public final class BeaconholdConfig {
         }
 
         /**
-         * Gives the number of chunks that the function "loaded chunks" loads for a pyramid level.
-         *
-         * @param pyramidLevel the pyramid level, from 0 to 4
-         * @return the number of chunks, or 0 for the pyramid level 0
-         */
-        public int chunkCount(int pyramidLevel) {
-            int[] values = new int[chunkCounts.length];
-            for (int i = 0; i < chunkCounts.length; i++) {
-                values[i] = chunkCounts[i].getAsInt();
-            }
-            return ChunkRules.chunkCount(pyramidLevel, values);
-        }
-
-        /**
          * Gives the maximum number of chunks that all the beacons of the server load together.
          *
          * @return the value of the option {@code loadedChunks.maxLoadedChunks}
@@ -152,7 +124,8 @@ public final class BeaconholdConfig {
         }
 
         /**
-         * Sets the option {@code loadedChunks.maxLoadedChunks}. The GameTests use this method.
+         * Sets the option {@code loadedChunks.maxLoadedChunks}. The command and the GameTests use this method. The
+         * method does not save the file.
          *
          * @param value the new value
          */

@@ -1,15 +1,21 @@
 package io.github.nicolasgoyon.beaconhold.gametest;
 
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.nicolasgoyon.beaconhold.Beaconhold;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
+import io.github.nicolasgoyon.beaconhold.function.ChunkRules;
 import io.github.nicolasgoyon.beaconhold.function.LoadedChunks;
 import io.github.nicolasgoyon.beaconhold.function.ModFunctions;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import java.util.List;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ForcedChunksSavedData;
@@ -42,6 +48,24 @@ public final class LoadedChunksGameTests {
         return result;
     }
 
+    /**
+     * Checks that a beacon loads the chunks that its area touches. A beacon at the level 1 loads 9 to 13 chunks, and a
+     * beacon at the level 2 loads 36 to 41 chunks.
+     */
+    private static void assertAreaChunks(GameTestHelper helper, BlockPos beacon, int pyramidLevel) {
+        int radius = BeaconholdConfig.SERVER.radius(pyramidLevel);
+        List<ChunkPos> area = ChunkRules.areaChunks(beacon.getX(), beacon.getZ(), radius);
+        int min = pyramidLevel == 1 ? 9 : 36;
+        int max = pyramidLevel == 1 ? 13 : 41;
+        helper.assertTrue(
+                area.size() >= min && area.size() <= max, "The area touches " + area.size() + " chunks");
+        assertChunks(helper, beacon, area.size());
+        LongSet chunks = LoadedChunks.chunksOf(helper.getLevel(), beacon);
+        for (ChunkPos chunk : area) {
+            helper.assertTrue(chunks.contains(chunk.toLong()), "The beacon must load each chunk of its area");
+        }
+    }
+
     private static void assertChunks(GameTestHelper helper, BlockPos beacon, int expected) {
         LongSet chunks = LoadedChunks.chunksOf(helper.getLevel(), beacon);
         helper.assertTrue(chunks.size() == expected, "Expected " + expected + " chunks, got " + chunks.size());
@@ -58,14 +82,14 @@ public final class LoadedChunksGameTests {
         }
     }
 
-    /** A larger pyramid loads more chunks. The chunks stay loaded, with a ticket of NeoForge. */
+    /** A larger pyramid loads more chunks: the chunks of its larger area. The chunks stay loaded, with a ticket of NeoForge. */
     @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_chunks_level")
     public static void largerPyramidLoadsMoreChunks(GameTestHelper helper) {
         BlockPos beacon = activeBeacon(helper, 1);
         helper.startSequence()
-                .thenWaitUntil(() -> assertChunks(helper, beacon, 1))
+                .thenWaitUntil(() -> assertAreaChunks(helper, beacon, 1))
                 .thenExecute(() -> BeaconTestSupport.addLayer(helper, 2))
-                .thenWaitUntil(() -> assertChunks(helper, beacon, 5))
+                .thenWaitUntil(() -> assertAreaChunks(helper, beacon, 2))
                 .thenExecute(() -> {
                     LongSet chunks = LoadedChunks.chunksOf(helper.getLevel(), beacon);
                     BeaconTestSupport.removeBeacon(helper);
@@ -80,13 +104,13 @@ public final class LoadedChunksGameTests {
         BlockPos beacon = activeBeacon(helper, 2);
         LongSet chunks = new LongOpenHashSet();
         helper.startSequence()
-                .thenWaitUntil(() -> assertChunks(helper, beacon, 5))
+                .thenWaitUntil(() -> assertAreaChunks(helper, beacon, 2))
                 .thenExecute(() -> {
                     chunks.addAll(LoadedChunks.chunksOf(helper.getLevel(), beacon));
                     helper.setBlock(BeaconTestSupport.BEACON.above(), Blocks.GLASS);
                 })
                 .thenIdle(100)
-                .thenExecute(() -> assertChunks(helper, beacon, 5))
+                .thenExecute(() -> assertAreaChunks(helper, beacon, 2))
                 .thenExecute(() -> helper.setBlock(BeaconTestSupport.BEACON.above(), Blocks.STONE))
                 .thenWaitUntil(() -> assertNoChunk(helper, beacon, chunks))
                 .thenExecute(() -> BeaconTestSupport.removeBeacon(helper))
@@ -99,7 +123,7 @@ public final class LoadedChunksGameTests {
         BlockPos beacon = activeBeacon(helper, 1);
         LongSet chunks = new LongOpenHashSet();
         helper.startSequence()
-                .thenWaitUntil(() -> assertChunks(helper, beacon, 1))
+                .thenWaitUntil(() -> assertAreaChunks(helper, beacon, 1))
                 .thenExecute(() -> {
                     chunks.addAll(LoadedChunks.chunksOf(helper.getLevel(), beacon));
                     helper.setBlock(BeaconTestSupport.BEACON, Blocks.AIR);
@@ -150,5 +174,33 @@ public final class LoadedChunksGameTests {
                     BeaconTestSupport.removeBeacon(helper);
                 })
                 .thenSucceed();
+    }
+
+    /** The command of the operators shows and sets the limit of the server. */
+    @GameTest(template = "beacon", batch = "beaconhold_chunks_command")
+    public static void commandSetsTheLimit(GameTestHelper helper) {
+        MinecraftServer server = helper.getLevel().getServer();
+        CommandSourceStack source = server.createCommandSourceStack().withSuppressedOutput();
+        Commands commands = server.getCommands();
+        BeaconholdConfig.Server config = BeaconholdConfig.SERVER;
+        int before = config.maxLoadedChunks();
+        try {
+            int shown = commands.getDispatcher().execute("beaconhold chunks limit", source);
+            helper.assertTrue(shown == before, "The command shows the limit");
+            commands.getDispatcher().execute("beaconhold chunks limit 300", source);
+            helper.assertTrue(config.maxLoadedChunks() == 300, "The command sets the limit");
+            try {
+                commands.getDispatcher().execute("beaconhold chunks limit -1", source);
+                helper.fail("The command refuses a negative limit");
+            } catch (CommandSyntaxException expected) {
+                helper.assertTrue(config.maxLoadedChunks() == 300, "The limit does not change");
+            }
+        } catch (CommandSyntaxException exception) {
+            helper.fail("The command must operate: " + exception.getMessage());
+        } finally {
+            config.setMaxLoadedChunks(before);
+            BeaconholdConfig.SERVER_SPEC.save();
+        }
+        helper.succeed();
     }
 }

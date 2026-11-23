@@ -1,6 +1,7 @@
 package io.github.nicolasgoyon.beaconhold.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
@@ -9,6 +10,7 @@ import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconRecord;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
+import io.github.nicolasgoyon.beaconhold.function.LoadedChunks;
 import io.github.nicolasgoyon.beaconhold.registry.ModRegistries;
 import java.util.Optional;
 import net.minecraft.commands.CommandSourceStack;
@@ -26,10 +28,12 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 /**
- * The command {@code /beaconhold function} for the operators: it gets, sets and removes the function of a beacon.
+ * The commands of the operators. {@code /beaconhold function} gets, sets and removes the function of a beacon.
+ * {@code /beaconhold chunks limit} shows and sets the maximum number of chunks that all the beacons load together.
  */
 public final class BeaconholdCommand {
     private static final String PREFIX = "commands.beaconhold.function.";
+    private static final String CHUNKS_PREFIX = "commands.beaconhold.chunks.limit.";
     private static final DynamicCommandExceptionType NO_BEACON =
             new DynamicCommandExceptionType(pos -> Component.translatable(PREFIX + "no_beacon", pos));
     private static final DynamicCommandExceptionType UNKNOWN_FUNCTION =
@@ -63,7 +67,14 @@ public final class BeaconholdCommand {
                                                 .executes(BeaconholdCommand::set))))
                         .then(Commands.literal("clear")
                                 .then(Commands.argument("pos", BlockPosArgument.blockPos())
-                                        .executes(BeaconholdCommand::clear)))));
+                                        .executes(BeaconholdCommand::clear))))
+                .then(Commands.literal("chunks")
+                        .then(Commands.literal("limit")
+                                .executes(BeaconholdCommand::getLimit)
+                                .then(Commands.argument(
+                                                "chunks",
+                                                IntegerArgumentType.integer(0, BeaconholdConfig.MAX_LOADED_CHUNKS))
+                                        .executes(BeaconholdCommand::setLimit)))));
     }
 
     private static int get(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
@@ -102,6 +113,22 @@ public final class BeaconholdCommand {
         BeaconholdApi.setFunction(level, pos, null);
         context.getSource().sendSuccess(() -> Component.translatable(PREFIX + "clear", format(pos)), true);
         return 1;
+    }
+
+    private static int getLimit(CommandContext<CommandSourceStack> context) {
+        int used = LoadedChunks.totalLoadedChunks(context.getSource().getLevel());
+        int limit = BeaconholdConfig.SERVER.maxLoadedChunks();
+        context.getSource().sendSuccess(() -> Component.translatable(CHUNKS_PREFIX + "get", used, limit), false);
+        return limit;
+    }
+
+    private static int setLimit(CommandContext<CommandSourceStack> context) {
+        int limit = IntegerArgumentType.getInteger(context, "chunks");
+        BeaconholdConfig.SERVER.setMaxLoadedChunks(limit);
+        BeaconholdConfig.SERVER_SPEC.save();
+        int used = LoadedChunks.totalLoadedChunks(context.getSource().getLevel());
+        context.getSource().sendSuccess(() -> Component.translatable(CHUNKS_PREFIX + "set", limit, used), true);
+        return limit;
     }
 
     private static void requireBeacon(ServerLevel level, BlockPos pos) throws CommandSyntaxException {

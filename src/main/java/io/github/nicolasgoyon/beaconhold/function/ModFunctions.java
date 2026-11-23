@@ -16,16 +16,9 @@ public final class ModFunctions {
     public static final DeferredHolder<BeaconFunction, BeaconFunction> NO_HOSTILE_SPAWNS = FUNCTIONS.register(
             "no_hostile_spawns", () -> BeaconFunction.builder().icon(() -> Items.ROTTEN_FLESH).build());
 
-    /**
-     * The beacon keeps the chunks near it loaded. The loaded chunks are not the area of the beacon, so the clients do
-     * not show the energy dome for this function.
-     */
+    /** The beacon keeps the chunks of its area loaded. */
     public static final DeferredHolder<BeaconFunction, BeaconFunction> LOADED_CHUNKS = FUNCTIONS.register(
-            "loaded_chunks",
-            () -> BeaconFunction.builder()
-                    .icon(() -> Items.ENDER_PEARL)
-                    .showsArea(false)
-                    .build());
+            "loaded_chunks", () -> BeaconFunction.builder().icon(() -> Items.ENDER_PEARL).build());
 
     private ModFunctions() {
     }

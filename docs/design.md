@@ -47,21 +47,22 @@ The mod has the API for other mods, the area of a beacon and the command for the
 ### Loaded chunks
 
 - The id of the function is `beaconhold:loaded_chunks`.
-- An active beacon with this function keeps chunks near it loaded. The chunks tick as if a player is near them: the crops grow and the machines operate.
-- The loaded area is smaller than the area of the other functions. The loaded area is a number of chunks, not a radius in blocks.
-- The beacon loads its own chunk first, then the nearest chunks. The default numbers of chunks:
+- An active beacon with this function keeps the chunks of its area loaded. The chunks tick as if a player is near them: the crops grow and the machines operate.
+- The area is the same column as for the other functions (see [Area](#area)). The beacon loads each chunk that the area touches: a chunk with at least one column of blocks in the area.
+- The number of chunks depends on the position of the beacon in its chunk. The numbers for the default radii:
 
-  | Pyramid level | Chunks | Shape |
-  |---|---|---|
-  | 1 | 1 | the chunk of the beacon |
-  | 2 | 5 | a cross of 5 chunks |
-  | 3 | 9 | a square of 3 × 3 chunks |
-  | 4 | 13 | a circle with a radius of 2 chunks |
+  | Pyramid level | Radius (blocks) | Chunks | Chunks for a beacon in the center of its chunk |
+  |---|---|---|---|
+  | 1 | 20 | 9 to 13 | 9 |
+  | 2 | 47 | 36 to 41 | 39 |
+  | 3 | 73 | 81 to 88 | 85 |
+  | 4 | 100 | 144 to 151 | 145 |
 
-- The server options `chunksLevel1` to `chunksLevel4` set the numbers of chunks.
-- The server option `maxLoadedChunks` sets the maximum number of chunks that all the beacons of the server load together. The default value is 256. When a beacon starts and the limit is near, the beacon loads fewer chunks. It always loads its nearest chunks first. When another beacon releases its chunks, the beacon does not get more chunks. It gets them when it starts its function again.
+- The server option `maxLoadedChunks` sets the maximum number of chunks that all the beacons of the server load together. The default value is 512: enough for 3 beacons at the pyramid level 4.
+- When a beacon starts and the limit is near, the beacon loads fewer chunks. It loads its own chunk first, then the nearest chunks. When another beacon releases its chunks, the beacon does not get more chunks. It gets them when it starts its function again.
+- The command `/beaconhold chunks limit` shows the number of loaded chunks and the limit. The command `/beaconhold chunks limit <chunks>` sets the limit and saves the server options. Only an operator can use the command.
 - The chunks stay loaded after a restart of the server. NeoForge saves the tickets of the chunks. When the server loads a world, it removes the tickets that the saved list of the beacons does not contain.
-- When the function stops, the beacon releases its chunks. When a pyramid level changes, the beacon releases its chunks, then loads the chunks of the new level.
+- When the function stops, the beacon releases its chunks. When a pyramid level changes, the beacon releases its chunks, then loads the chunks of the new area.
 - A change of the options has an effect when a beacon starts its function again.
 
 ## Area
@@ -143,7 +144,7 @@ The API is for other mods. [api.md](api.md) gives the dependency and examples. F
 - The veil fades with the distance. At 256 blocks from the edge, the client does not show the dome.
 - In a cave, more than 6 blocks under the ground, the ring is at the level of the feet of the player.
 - The color of the dome is a light cyan.
-- The function "loaded chunks" has no dome, because its chunks are not the area of the beacon. A function of another mod can also have no dome (see [api.md](api.md)).
+- Each function of the mod has a dome. A function of another mod can have no dome (see [api.md](api.md)).
 - The server sends the areas of the active beacons of a dimension to the players in this dimension. It sends them when a function starts or stops, and when a player enters the dimension.
 - The client option `dome.enabled` turns the dome off.
 
@@ -155,8 +156,7 @@ The server options are in `serverconfig/beaconhold-server.toml` in the world fol
 |---|---|---|---|
 | `area.radiusLevel1` to `area.radiusLevel4` | server | 20, 47, 73, 100 | #6 |
 | `noHostileSpawns.blockSpawners` | server | off | #4, #22 |
-| `loadedChunks.chunksLevel1` to `loadedChunks.chunksLevel4` | server | 1, 5, 9, 13 | #5 |
-| `loadedChunks.maxLoadedChunks` | server | 256 | #5 |
+| `loadedChunks.maxLoadedChunks` | server | 512 | #5, #23 |
 | `cost.ticksPerItem` | server | 3750 | #7 |
 | `beaconhold:beacon_consumables` | item tag (data) | amethyst shard, prismarine crystals, nether quartz | #8 |
 | `dome.enabled` | client | on | #9 |
@@ -165,7 +165,7 @@ The server options are in `serverconfig/beaconhold-server.toml` in the world fol
 
 The owner of the project gives the answers. Until then, the design uses the default values above, and an option keeps each value open.
 
-1. Loaded chunks: are 13 chunks at level 4 correct for "about 15 chunks"? Is a limit for each player necessary, in addition to the limit of the server? A limit for each player needs the beacon to save the player that placed it.
+1. Loaded chunks: is 512 a good default for the limit of the server? Is a limit for each player necessary, in addition to the limit of the server? A limit for each player needs the beacon to save the player that placed it.
 2. No hostile spawns: do the reinforcements of zombies also stop?
 3. Consumable: does a beacon with no function also use the consumable?
 4. Selection: the function screen opens from a button next to the vanilla beacon screen. Is a separate screen correct?
