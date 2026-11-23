@@ -273,6 +273,9 @@ public final class BeaconholdConfig {
         /** True if the client shows the energy domes of the active beacons. */
         private final ModConfigSpec.BooleanValue domeEnabled;
 
+        /** True if the client warns the player when the stock of a beacon is low. */
+        private final ModConfigSpec.BooleanValue lowStockWarning;
+
         Client(ModConfigSpec.Builder builder) {
             builder.comment("The energy dome: the visual of the area of an active beacon.")
                     .translation(key("dome"))
@@ -281,6 +284,22 @@ public final class BeaconholdConfig {
                     .translation(key("domeEnabled"))
                     .define("enabled", true);
             builder.pop();
+
+            builder.comment("The warnings of the beacons.").translation(key("warnings")).push("warnings");
+            lowStockWarning = builder.comment("True: a player in the area of a beacon gets a message and a sound when "
+                            + "the stock of the beacon lasts less than one game day.")
+                    .translation(key("lowStockWarning"))
+                    .define("lowStock", true);
+            builder.pop();
+        }
+
+        /**
+         * Tells if the client warns the player when the stock of a beacon is low.
+         *
+         * @return the value of the option {@code warnings.lowStock}
+         */
+        public boolean lowStockWarning() {
+            return lowStockWarning.getAsBoolean();
         }
 
         /**

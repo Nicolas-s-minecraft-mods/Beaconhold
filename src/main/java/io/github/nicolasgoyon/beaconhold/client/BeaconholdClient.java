@@ -33,6 +33,7 @@ public final class BeaconholdClient {
         NeoForge.EVENT_BUS.addListener(RenderLevelStageEvent.class, DomeRenderer::onRenderLevel);
         NeoForge.EVENT_BUS.addListener(ClientTickEvent.Post.class, DomeRenderer::onClientTick);
         NeoForge.EVENT_BUS.addListener(ClientPlayerNetworkEvent.LoggingOut.class, event -> DomeAreas.clear());
+        NeoForge.EVENT_BUS.addListener(ClientPlayerNetworkEvent.LoggingOut.class, event -> LowStockWarning.clear());
         NeoForge.EVENT_BUS.addListener(ScreenEvent.Init.Post.class, BeaconScreenButton::onScreenInit);
         modEventBus.addListener(RegisterMenuScreensEvent.class, event -> event.register(
                 ModMenus.BEACON_FUNCTIONS.get(), BeaconFunctionScreen::new));

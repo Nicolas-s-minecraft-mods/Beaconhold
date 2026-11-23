@@ -7,6 +7,8 @@ import io.github.nicolasgoyon.beaconhold.api.BeaconFunctionEvent;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import io.github.nicolasgoyon.beaconhold.cost.BeaconStock;
+import io.github.nicolasgoyon.beaconhold.cost.LowStockWarnings;
+import io.github.nicolasgoyon.beaconhold.cost.WarningRules;
 import io.github.nicolasgoyon.beaconhold.mixin.BeaconBlockEntityAccessor;
 import io.github.nicolasgoyon.beaconhold.network.AreaSync;
 import io.github.nicolasgoyon.beaconhold.registry.ModRegistries;
@@ -29,7 +31,8 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
  *
  * <p>Each beacon updates its record each {@link #UPDATE_INTERVAL} ticks, in the same tick as its vanilla powers. At each
  * update, a beacon with a pyramid and a free beam uses its stock of the consumable, with or without a function. A beacon
- * with no consumable is off (see {@link BeaconPower}). A loaded beacon keeps its saved active state until it
+ * with no consumable is off (see {@link BeaconPower}). An active beacon with a low stock warns the players in its area
+ * (see {@link LowStockWarnings}). A loaded beacon keeps its saved active state until it
  * knows its pyramid level and its beam (see {@link BeaconLoadRules}). The dimension also removes the records of the loaded
  * positions that have no beacon.
  */
@@ -91,6 +94,12 @@ public final class BeaconTracker {
         boolean canOperate = pyramidLevel > 0 && !beacon.getBeamSections().isEmpty();
         boolean active = BeaconStock.operate(level, beacon, wasOn, canOperate, periodic);
         BeaconPower.update(beacon, active);
+        if (periodic && active && BeaconholdConfig.SERVER.consumableRequired()) {
+            long remaining = BeaconStock.remainingTicks(beacon);
+            if (WarningRules.isLow(remaining)) {
+                LowStockWarnings.send(level, pos, BeaconholdConfig.SERVER.radius(pyramidLevel), remaining);
+            }
+        }
         BeaconRecord after = current
                 .map(function -> new BeaconRecord(pos, pyramidLevel, active, function.location()))
                 .orElse(null);

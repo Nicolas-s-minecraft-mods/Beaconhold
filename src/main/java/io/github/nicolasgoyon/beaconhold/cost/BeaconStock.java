@@ -109,6 +109,17 @@ public final class BeaconStock {
     }
 
     /**
+     * Gives the time of operation that the stock and the fuel of a beacon give.
+     *
+     * @param beacon the beacon
+     * @return the time in ticks
+     */
+    public static long remainingTicks(BeaconBlockEntity beacon) {
+        return FuelRules.remainingTicks(
+                usableCount(stock(beacon)), fuel(beacon), BeaconholdConfig.SERVER.ticksPerItem());
+    }
+
+    /**
      * Drops the stock of a beacon at its position, and removes the stock and the fuel. The fuel of the last item is
      * lost.
      *

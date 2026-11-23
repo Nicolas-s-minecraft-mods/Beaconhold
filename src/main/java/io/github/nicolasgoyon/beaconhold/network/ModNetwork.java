@@ -1,5 +1,6 @@
 package io.github.nicolasgoyon.beaconhold.network;
 
+import io.github.nicolasgoyon.beaconhold.client.LowStockWarning;
 import io.github.nicolasgoyon.beaconhold.client.dome.DomeAreas;
 import io.github.nicolasgoyon.beaconhold.menu.ModMenus;
 import net.neoforged.bus.api.IEventBus;
@@ -28,6 +29,8 @@ public final class ModNetwork {
         PayloadRegistrar registrar = event.registrar(VERSION);
         registrar.playToClient(
                 AreaSyncPayload.TYPE, AreaSyncPayload.STREAM_CODEC, (payload, context) -> DomeAreas.set(payload.areas()));
+        registrar.playToClient(
+                LowStockPayload.TYPE, LowStockPayload.STREAM_CODEC, (payload, context) -> LowStockWarning.show(payload));
         registrar.playToServer(
                 OpenFunctionsPayload.TYPE,
                 OpenFunctionsPayload.STREAM_CODEC,
