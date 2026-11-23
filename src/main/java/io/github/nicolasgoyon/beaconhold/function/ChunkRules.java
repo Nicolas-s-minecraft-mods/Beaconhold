@@ -80,6 +80,24 @@ public final class ChunkRules {
     }
 
     /**
+     * Gives the number of chunks that each beacon loads, with the limit of the server. The beacons get their chunks in
+     * the order of the list: a beacon gets the capacity that the beacons before it leave free.
+     *
+     * @param wanted the number of chunks that the area of each beacon touches, in the order of the beacons
+     * @param max the maximum number of chunks for all the beacons of the server
+     * @return the number of chunks for each beacon, in the same order
+     */
+    public static int[] allocate(int[] wanted, int max) {
+        int[] result = new int[wanted.length];
+        int used = 0;
+        for (int i = 0; i < wanted.length; i++) {
+            result[i] = allowedChunks(wanted[i], used, max);
+            used += result[i];
+        }
+        return result;
+    }
+
+    /**
      * Gives the chunks of a ticket that the saved list of a beacon does not contain. The server removes these tickets
      * when it loads a world.
      *

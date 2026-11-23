@@ -8,10 +8,13 @@ import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.neoforged.bus.api.IEventBus;
@@ -125,6 +128,80 @@ public final class LoadedChunks {
             CONTROLLER.forceChunk(level, pos, chunk.x, chunk.z, false, true);
         }
         data.set(pos, null);
+    }
+
+    /**
+     * Gives the chunks to each active beacon with this function again, with the current options. The server calls this
+     * method after a change of the options.
+     *
+     * <p>The beacons get their chunks in the order of the dimensions, then in the order of the saved list of the
+     * chunks. A beacon with no saved chunks comes after the beacons with saved chunks. The method changes only the
+     * tickets of the chunks that a beacon gets or releases.
+     *
+     * @param server the server
+     */
+    public static void rebalance(MinecraftServer server) {
+        List<ServerLevel> levels = new ArrayList<>();
+        List<ActiveBeacon> beacons = new ArrayList<>();
+        List<List<ChunkPos>> areas = new ArrayList<>();
+        for (ServerLevel level : server.getAllLevels()) {
+            LoadedChunksSavedData data = LoadedChunksSavedData.get(level);
+            Map<BlockPos, ActiveBeacon> active = new LinkedHashMap<>();
+            for (ActiveBeacon beacon : BeaconholdApi.activeBeacons(level)) {
+                if (isLoadedChunks(beacon)) {
+                    active.put(beacon.pos(), beacon);
+                }
+            }
+            for (BlockPos pos : data.positions()) {
+                if (!active.containsKey(pos)) {
+                    release(level, pos);
+                }
+            }
+            List<ActiveBeacon> ordered = new ArrayList<>();
+            for (BlockPos pos : data.positions()) {
+                ordered.add(active.remove(pos));
+            }
+            ordered.addAll(active.values());
+            for (ActiveBeacon beacon : ordered) {
+                levels.add(level);
+                beacons.add(beacon);
+                areas.add(ChunkRules.areaChunks(
+                        beacon.pos().getX(), beacon.pos().getZ(), beacon.area().radius()));
+            }
+        }
+        int[] wanted = new int[areas.size()];
+        for (int i = 0; i < wanted.length; i++) {
+            wanted[i] = areas.get(i).size();
+        }
+        int[] allowed = ChunkRules.allocate(wanted, BeaconholdConfig.SERVER.maxLoadedChunks());
+        for (int i = 0; i < allowed.length; i++) {
+            LongSet chunks = new LongOpenHashSet();
+            for (ChunkPos chunk : areas.get(i).subList(0, allowed[i])) {
+                chunks.add(chunk.toLong());
+            }
+            assign(levels.get(i), beacons.get(i).pos(), chunks);
+        }
+    }
+
+    /** Sets the chunks of a beacon. The method changes only the tickets of the chunks that are new or released. */
+    private static void assign(ServerLevel level, BlockPos pos, LongSet chunks) {
+        LoadedChunksSavedData data = LoadedChunksSavedData.get(level);
+        LongSet before = data.get(pos);
+        if (before != null) {
+            for (LongIterator it = before.iterator(); it.hasNext(); ) {
+                long chunk = it.nextLong();
+                if (!chunks.contains(chunk)) {
+                    CONTROLLER.forceChunk(level, pos, ChunkPos.getX(chunk), ChunkPos.getZ(chunk), false, true);
+                }
+            }
+        }
+        for (LongIterator it = chunks.iterator(); it.hasNext(); ) {
+            long chunk = it.nextLong();
+            if (before == null || !before.contains(chunk)) {
+                CONTROLLER.forceChunk(level, pos, ChunkPos.getX(chunk), ChunkPos.getZ(chunk), true, true);
+            }
+        }
+        data.set(pos, chunks.isEmpty() ? null : chunks);
     }
 
     /**
