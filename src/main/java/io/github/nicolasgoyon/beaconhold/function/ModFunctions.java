@@ -16,6 +16,10 @@ public final class ModFunctions {
     public static final DeferredHolder<BeaconFunction, BeaconFunction> NO_HOSTILE_SPAWNS = FUNCTIONS.register(
             "no_hostile_spawns", () -> BeaconFunction.builder().icon(() -> Items.ROTTEN_FLESH).build());
 
+    /** The beacon keeps the chunks near it loaded. */
+    public static final DeferredHolder<BeaconFunction, BeaconFunction> LOADED_CHUNKS = FUNCTIONS.register(
+            "loaded_chunks", () -> BeaconFunction.builder().icon(() -> Items.ENDER_PEARL).build());
+
     private ModFunctions() {
     }
 
