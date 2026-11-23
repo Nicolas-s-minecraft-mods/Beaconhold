@@ -161,4 +161,35 @@ class ChunkRulesTest {
             before = after;
         }
     }
+
+    @Test
+    void aReleasedBeaconGivesItsCapacityToTheBeaconsAfterIt() {
+        int[] wanted = {145, 145, 145, 145};
+        assertArrayEquals(new int[] {145, 145, 145, 77}, ChunkRules.allocate(wanted, 512));
+        // The second beacon releases its chunks: the last beacon gets all its chunks.
+        assertArrayEquals(new int[] {145, 145, 145}, ChunkRules.allocate(new int[] {145, 145, 145}, 512));
+    }
+
+    @Test
+    void noBeaconGetsFewerChunksWhenAnotherBeaconReleasesItsChunks() {
+        int[] wanted = {41, 9, 151, 85, 13, 145};
+        for (int max = 0; max <= 450; max += 7) {
+            int[] before = ChunkRules.allocate(wanted, max);
+            for (int removed = 0; removed < wanted.length; removed++) {
+                int[] rest = new int[wanted.length - 1];
+                for (int i = 0, j = 0; i < wanted.length; i++) {
+                    if (i != removed) {
+                        rest[j++] = wanted[i];
+                    }
+                }
+                int[] after = ChunkRules.allocate(rest, max);
+                for (int i = 0, j = 0; i < wanted.length; i++) {
+                    if (i != removed) {
+                        assertTrue(after[j] >= before[i], "Beacon " + i + " after the release of " + removed);
+                        j++;
+                    }
+                }
+            }
+        }
+    }
 }

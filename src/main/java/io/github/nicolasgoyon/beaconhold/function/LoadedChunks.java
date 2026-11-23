@@ -24,18 +24,23 @@ import net.neoforged.neoforge.common.world.chunk.TicketController;
 import net.neoforged.neoforge.common.world.chunk.TicketHelper;
 import net.neoforged.neoforge.common.world.chunk.TicketSet;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 /**
  * The function "loaded chunks": an active beacon keeps the chunks near it loaded and ticking.
  *
  * <p>NeoForge saves the tickets, so the chunks stay loaded after a restart of the server. When the server loads a
  * world, it removes the tickets that the saved list of the chunks does not contain. When the server starts, it makes the
- * tickets agree with the saved lists (see {@link #restore(ServerLevel)}).
+ * tickets agree with the saved lists (see {@link #restore(ServerLevel)}), then applies the current options (see
+ * {@link #rebalance(MinecraftServer)}).
  */
 public final class LoadedChunks {
     /** The controller of the chunk tickets of the beacons. */
     public static final TicketController CONTROLLER = new TicketController(
             ResourceLocation.fromNamespaceAndPath(BeaconholdApi.MOD_ID, "beacon"), LoadedChunks::validateTickets);
+
+    /** True when a beacon released chunks in this tick. The server then gives the free capacity at the end of the tick. */
+    private static boolean rebalancePending;
 
     private LoadedChunks() {
     }
@@ -49,10 +54,17 @@ public final class LoadedChunks {
         modEventBus.addListener(RegisterTicketControllersEvent.class, event -> event.register(CONTROLLER));
         NeoForge.EVENT_BUS.addListener(BeaconFunctionEvent.Start.class, LoadedChunks::onStart);
         NeoForge.EVENT_BUS.addListener(BeaconFunctionEvent.Stop.class, LoadedChunks::onStop);
+        NeoForge.EVENT_BUS.addListener(ServerTickEvent.Post.class, event -> {
+            if (rebalancePending) {
+                rebalancePending = false;
+                rebalance(event.getServer());
+            }
+        });
         NeoForge.EVENT_BUS.addListener(ServerStartedEvent.class, event -> {
             for (ServerLevel level : event.getServer().getAllLevels()) {
                 restore(level);
             }
+            rebalance(event.getServer());
         });
     }
 
@@ -96,8 +108,8 @@ public final class LoadedChunks {
     }
 
     private static void onStop(BeaconFunctionEvent.Stop event) {
-        if (isLoadedChunks(event.getBeacon())) {
-            release(event.getLevel(), event.getBeacon().pos());
+        if (isLoadedChunks(event.getBeacon()) && release(event.getLevel(), event.getBeacon().pos())) {
+            rebalancePending = true;
         }
     }
 
@@ -117,22 +129,25 @@ public final class LoadedChunks {
         }
     }
 
-    private static void release(ServerLevel level, BlockPos pos) {
+    /** Releases the chunks of a beacon, and tells if the beacon had chunks. */
+    private static boolean release(ServerLevel level, BlockPos pos) {
         LoadedChunksSavedData data = LoadedChunksSavedData.get(level);
         LongSet chunks = data.get(pos);
         if (chunks == null) {
-            return;
+            return false;
         }
         for (LongIterator it = chunks.iterator(); it.hasNext(); ) {
             ChunkPos chunk = new ChunkPos(it.nextLong());
             CONTROLLER.forceChunk(level, pos, chunk.x, chunk.z, false, true);
         }
         data.set(pos, null);
+        return true;
     }
 
     /**
      * Gives the chunks to each active beacon with this function again, with the current options. The server calls this
-     * method after a change of the options.
+     * method after a change of the options, and at the end of a tick when a beacon released chunks. Thus the beacons
+     * that got fewer chunks because of the limit get the free capacity.
      *
      * <p>The beacons get their chunks in the order of the dimensions, then in the order of the saved list of the
      * chunks. A beacon with no saved chunks comes after the beacons with saved chunks. The method changes only the

@@ -4,6 +4,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.nicolasgoyon.beaconhold.Beaconhold;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
+import io.github.nicolasgoyon.beaconhold.cost.BeaconStock;
 import io.github.nicolasgoyon.beaconhold.function.ChunkRules;
 import io.github.nicolasgoyon.beaconhold.function.LoadedChunks;
 import io.github.nicolasgoyon.beaconhold.function.LoadedChunksSavedData;
@@ -18,9 +19,12 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ForcedChunksSavedData;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -201,6 +205,75 @@ public final class LoadedChunksGameTests {
         helper.assertTrue(LoadedChunks.chunksOf(level, missing).isEmpty(), "The saved list must have no chunk");
         helper.assertFalse(forcedTickingChunks(level).contains(chunk.toLong()), "NeoForge must have no ticket");
         helper.succeed();
+    }
+
+    /** Builds a beacon at the pyramid level 1 with a stock, at a relative position of the template "two_beacons". */
+    private static BlockPos buildBeaconAt(GameTestHelper helper, BlockPos relative) {
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                helper.setBlock(relative.offset(x, -1, z), Blocks.IRON_BLOCK);
+            }
+        }
+        helper.setBlock(relative, Blocks.BEACON);
+        BeaconBlockEntity entity = helper.getBlockEntity(relative);
+        BeaconStock.setStock(entity, new ItemStack(Items.AMETHYST_SHARD, 64));
+        return helper.absolutePos(relative);
+    }
+
+    private static void removeBeaconAt(GameTestHelper helper, BlockPos relative) {
+        BlockPos pos = helper.absolutePos(relative);
+        BeaconholdApi.setFunction(helper.getLevel(), pos, null);
+        if (helper.getLevel().getBlockEntity(pos) instanceof BeaconBlockEntity entity) {
+            BeaconStock.setStock(entity, ItemStack.EMPTY);
+        }
+        helper.setBlock(relative, Blocks.AIR);
+    }
+
+    /**
+     * A beacon that got fewer chunks because of the limit gets the free capacity when another beacon releases its
+     * chunks.
+     */
+    @GameTest(template = "two_beacons", timeoutTicks = TIMEOUT, batch = "beaconhold_chunks_free")
+    public static void releasedChunksGoToTheBeaconWithFewerChunks(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BeaconholdConfig.Server config = BeaconholdConfig.SERVER;
+        int before = config.maxLoadedChunks();
+        BlockPos firstRelative = new BlockPos(2, 2, 2);
+        BlockPos secondRelative = new BlockPos(10, 2, 2);
+        BlockPos first = buildBeaconAt(helper, firstRelative);
+        BlockPos second = buildBeaconAt(helper, secondRelative);
+        int secondArea = ChunkRules.areaChunks(second.getX(), second.getZ(), config.radius(1)).size();
+        BeaconholdApi.setFunction(level, first, ModFunctions.LOADED_CHUNKS.getKey());
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(
+                        BeaconholdApi.isCovered(level, first, ModFunctions.LOADED_CHUNKS.getKey()),
+                        "The first beacon must be active"))
+                .thenExecute(() -> {
+                    config.setMaxLoadedChunks(LoadedChunks.totalLoadedChunks(level) + 3);
+                    BeaconholdApi.setFunction(level, second, ModFunctions.LOADED_CHUNKS.getKey());
+                })
+                .thenWaitUntil(() -> helper.assertTrue(
+                        BeaconholdApi.isCovered(level, second, ModFunctions.LOADED_CHUNKS.getKey()),
+                        "The second beacon must be active"))
+                .thenExecute(() -> {
+                    int chunks = LoadedChunks.chunksOf(level, second).size();
+                    if (chunks != 3) {
+                        config.setMaxLoadedChunks(before);
+                    }
+                    helper.assertTrue(chunks == 3, "The limit gives 3 chunks to the second beacon, got " + chunks);
+                    removeBeaconAt(helper, firstRelative);
+                })
+                .thenWaitUntil(() -> helper.assertTrue(
+                        LoadedChunks.chunksOf(level, second).size() == secondArea,
+                        "The second beacon must get the chunks of its full area"))
+                .thenExecute(() -> {
+                    config.setMaxLoadedChunks(before);
+                    helper.assertTrue(
+                            forcedTickingChunks(level).containsAll(LoadedChunks.chunksOf(level, second)),
+                            "NeoForge must have a ticket for each chunk");
+                    removeBeaconAt(helper, secondRelative);
+                })
+                .thenSucceed();
     }
 
     /** A beacon with another function loads no chunk. */
