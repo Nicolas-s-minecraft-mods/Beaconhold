@@ -2,6 +2,7 @@ package io.github.nicolasgoyon.beaconhold.gametest;
 
 import io.github.nicolasgoyon.beaconhold.Beaconhold;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
+import io.github.nicolasgoyon.beaconhold.beacon.BeaconPower;
 import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import io.github.nicolasgoyon.beaconhold.cost.BeaconStock;
@@ -130,11 +131,15 @@ public final class CostGameTests {
         return hopper;
     }
 
-    /** A hopper puts consumable items into the stock. A hopper with other items puts nothing. Nothing comes out. */
+    /**
+     * A hopper puts consumable items into the stock. A hopper with other items puts nothing. Nothing comes out. A block
+     * stops the beam, so that the beacon does not use its stock during the test.
+     */
     @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_cost_hopper")
     public static void hopperFillsTheStock(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos beacon = BeaconTestSupport.buildBeaconWithNoStock(helper, 1);
+        helper.setBlock(BeaconTestSupport.BEACON.above(), Blocks.STONE);
         HopperBlockEntity quartz = hopperTo(helper, Direction.EAST, new ItemStack(Items.QUARTZ, 5));
         HopperBlockEntity dirt = hopperTo(helper, Direction.WEST, new ItemStack(Items.DIRT, 5));
         helper.startSequence()
@@ -153,6 +158,7 @@ public final class CostGameTests {
                     dirt.clearContent();
                     helper.setBlock(BeaconTestSupport.BEACON.east(), Blocks.AIR);
                     helper.setBlock(BeaconTestSupport.BEACON.west(), Blocks.AIR);
+                    helper.setBlock(BeaconTestSupport.BEACON.above(), Blocks.AIR);
                     BeaconTestSupport.removeBeacon(helper);
                 })
                 .thenSucceed();
@@ -266,5 +272,31 @@ public final class CostGameTests {
         player.getInventory().clearContent();
         BeaconTestSupport.removeBeacon(helper);
         helper.succeed();
+    }
+
+    /**
+     * With the option {@code cost.consumableRequired} off, a beacon with no stock is on and its function is active. A
+     * beacon with a stock keeps it.
+     */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_cost_not_required")
+    public static void optionOffNeedsNoConsumable(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BeaconholdConfig.SERVER.setConsumableRequired(false);
+        BlockPos beacon = BeaconTestSupport.buildBeaconWithNoStock(helper, 1);
+        BeaconholdApi.setFunction(level, beacon, TestFunctions.TEST);
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(isActive(level, beacon), "The function must start with no stock"))
+                .thenExecute(() -> {
+                    helper.assertFalse(
+                            BeaconPower.isOff(BeaconTestSupport.beaconEntity(helper)), "The beacon must be on");
+                    BeaconTestSupport.setStock(helper, new ItemStack(Items.AMETHYST_SHARD, 10));
+                })
+                .thenIdle((int) BeaconTracker.UPDATE_INTERVAL * 2)
+                .thenExecute(() -> {
+                    BeaconholdConfig.SERVER.setConsumableRequired(true);
+                    helper.assertTrue(stockCount(helper) == 10, "The beacon keeps its stock");
+                    BeaconTestSupport.removeBeacon(helper);
+                })
+                .thenSucceed();
     }
 }

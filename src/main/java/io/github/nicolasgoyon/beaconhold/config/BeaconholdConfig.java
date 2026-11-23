@@ -58,6 +58,9 @@ public final class BeaconholdConfig {
         /** The number of ticks for each consumable item of an active function. */
         private final ModConfigSpec.IntValue ticksPerItem;
 
+        /** True if a beacon needs the consumable to be on. */
+        private final ModConfigSpec.BooleanValue consumableRequired;
+
         Server(ModConfigSpec.Builder builder) {
             builder.comment("The area of a beacon: a vertical cylinder around the beacon. The functions and the vanilla "
                             + "powers of the beacon use this area.")
@@ -106,6 +109,10 @@ public final class BeaconholdConfig {
             builder.pop();
 
             builder.comment("The cost of the beacon functions.").translation(key("cost")).push("cost");
+            consumableRequired = builder.comment("True: a beacon needs the consumable to be on. False: the vanilla "
+                            + "rule. A beacon with a pyramid and a free beam is on, and it keeps its stock.")
+                    .translation(key("consumableRequired"))
+                    .define("consumableRequired", true);
             ticksPerItem = builder.comment("The number of ticks for each consumable item of an active function. "
                             + "With 3750 ticks, one stack of 64 items lasts 10 game days.")
                     .translation(key("ticksPerItem"))
@@ -115,6 +122,24 @@ public final class BeaconholdConfig {
                             CostRules.MIN_TICKS_PER_ITEM,
                             CostRules.MAX_TICKS_PER_ITEM);
             builder.pop();
+        }
+
+        /**
+         * Tells if a beacon needs the consumable to be on.
+         *
+         * @return the value of the option {@code cost.consumableRequired}
+         */
+        public boolean consumableRequired() {
+            return consumableRequired.getAsBoolean();
+        }
+
+        /**
+         * Sets the option {@code cost.consumableRequired}. The GameTests use this method.
+         *
+         * @param value the new value
+         */
+        public void setConsumableRequired(boolean value) {
+            consumableRequired.set(value);
         }
 
         /**

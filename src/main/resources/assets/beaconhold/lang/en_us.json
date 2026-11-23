@@ -5,6 +5,8 @@
   "beaconhold.configuration.area.tooltip": "The area of a beacon: a vertical cylinder around the beacon. The functions and the vanilla powers of the beacon use this area.",
   "beaconhold.configuration.blockSpawners": "Stop the spawners",
   "beaconhold.configuration.blockSpawners.tooltip": "On: the function also stops the spawns of the monster spawners and of the trial spawners in its area. The function does not stop the patrols, the raids and the spawns that a player starts.",
+  "beaconhold.configuration.consumableRequired": "Consumable required",
+  "beaconhold.configuration.consumableRequired.tooltip": "On: a beacon needs the consumable to be on. Off: the vanilla rule. A beacon with a pyramid and a free beam is on, and it keeps its stock.",
   "beaconhold.configuration.cost": "Cost",
   "beaconhold.configuration.cost.tooltip": "The cost of the beacon functions.",
   "beaconhold.configuration.dome": "Energy dome",
