@@ -1,6 +1,8 @@
 package io.github.nicolasgoyon.beaconhold.beacon;
 
+import io.github.nicolasgoyon.beaconhold.config.AreaRadii;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -21,6 +23,13 @@ public final class BeaconSavedData extends SavedData {
     private static final String TAG_BEACONS = "beacons";
 
     private final Map<BlockPos, BeaconRecord> beacons = new LinkedHashMap<>();
+
+    /** The index of the areas of the active records, for the radii {@link #indexRadii}. The game does not save it. */
+    private final AreaIndex<BeaconRecord> index = new AreaIndex<>();
+
+    /** The radii of the index, or null before the first query. */
+    @Nullable
+    private int[] indexRadii;
 
     /**
      * Gives the saved list of a dimension. The dimension makes a new list when it has no list.
@@ -95,6 +104,37 @@ public final class BeaconSavedData extends SavedData {
         } else {
             beacons.put(beacon.pos(), beacon);
         }
+        if (indexRadii != null) {
+            index.remove(pos.asLong());
+            if (beacon != null) {
+                addToIndex(beacon, indexRadii);
+            }
+        }
         setDirty();
+    }
+
+    /**
+     * Gives the index of the areas of the active records. The method makes the index again when the radii change.
+     *
+     * @param radii the radii of the area in blocks, for the pyramid levels 1 to 4
+     * @return the index. Its values are the active records.
+     */
+    public AreaIndex<BeaconRecord> activeIndex(int[] radii) {
+        if (!Arrays.equals(radii, indexRadii)) {
+            int[] copy = radii.clone();
+            index.clear();
+            for (BeaconRecord beacon : beacons.values()) {
+                addToIndex(beacon, copy);
+            }
+            indexRadii = copy;
+        }
+        return index;
+    }
+
+    private void addToIndex(BeaconRecord beacon, int[] radii) {
+        if (beacon.active()) {
+            BlockPos pos = beacon.pos();
+            index.put(pos.asLong(), pos.getX(), pos.getZ(), AreaRadii.radius(beacon.pyramidLevel(), radii), beacon);
+        }
     }
 }

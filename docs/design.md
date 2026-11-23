@@ -140,6 +140,7 @@ The mod has the API for other mods, the area of a beacon and the command for the
 - Each dimension of the server saves a list of the beacons that have a function. For each beacon, the list keeps the position, the pyramid level, the function and the state (active or not).
 - The beacon updates its entry each 80 ticks (4 seconds), at the same time as the vanilla powers.
 - A beacon in a chunk that is not loaded keeps its last state. The queries use the saved list, so they do not load chunks.
+- Each dimension keeps a spatial index of the areas of the active beacons, in memory. The index puts each area in the cells of a grid of 64 blocks. A query reads only the areas of the cell of the position. A change of a record updates the index at once. A change of the radii makes the index again at the next query.
 - The game does not save the pyramid level and the beam. After a load of its chunk, a beacon scans its beam again, then calculates its pyramid level at the next update. Until then, an active beacon keeps its saved state and uses no consumable. A change of the function applies at once.
 - When a loaded chunk has no beacon at the position of an entry, the server removes the entry.
 

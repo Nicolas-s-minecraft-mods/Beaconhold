@@ -233,4 +233,35 @@ public final class BeaconApiGameTests {
                 })
                 .thenSucceed();
     }
+
+    /**
+     * The queries follow each change of a record at once: the edge of the area, the removal of the function and a
+     * second function.
+     */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_api_index")
+    public static void queriesFollowTheChangesOfTheRecords(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos beacon = BeaconTestSupport.buildBeacon(helper, 1);
+        BeaconholdApi.setFunction(level, beacon, TestFunctions.TEST);
+        BlockPos edge = beacon.offset(-20, 0, 0);
+        BlockPos out = beacon.offset(-21, 0, 0);
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(
+                        BeaconholdApi.isCovered(level, edge, TestFunctions.TEST), "The edge must be in the area"))
+                .thenExecute(() -> {
+                    helper.assertFalse(
+                            BeaconholdApi.isCovered(level, out, TestFunctions.TEST), "The next block is out");
+                    helper.assertTrue(
+                            BeaconholdApi.beaconsCovering(level, edge, TestFunctions.TEST).size() == 1,
+                            "One beacon covers the edge");
+                    BeaconholdApi.setFunction(level, beacon, TestFunctions.NO_AREA);
+                    helper.assertFalse(
+                            BeaconholdApi.isCovered(level, edge, TestFunctions.TEST), "The old function is gone");
+                    BeaconholdApi.setFunction(level, beacon, null);
+                    helper.assertFalse(
+                            BeaconholdApi.isCovered(level, edge, TestFunctions.NO_AREA), "No function: no area");
+                    BeaconTestSupport.removeBeacon(helper);
+                })
+                .thenSucceed();
+    }
 }
