@@ -174,8 +174,8 @@ public final class BeaconTracker {
     public static List<ActiveBeacon> beaconsCovering(
             ServerLevel level, BlockPos pos, ResourceKey<BeaconFunction> function) {
         List<ActiveBeacon> result = new ArrayList<>();
-        for (BeaconRecord beacon : BeaconSavedData.get(level).all()) {
-            if (covers(beacon, pos, function)) {
+        for (BeaconRecord beacon : indexedAreas(level, pos)) {
+            if (beacon.function().equals(function.location())) {
                 result.add(toActiveBeacon(beacon));
             }
         }
@@ -191,18 +191,19 @@ public final class BeaconTracker {
      * @return true if at least one beacon covers the position
      */
     public static boolean isCovered(ServerLevel level, BlockPos pos, ResourceKey<BeaconFunction> function) {
-        for (BeaconRecord beacon : BeaconSavedData.get(level).all()) {
-            if (covers(beacon, pos, function)) {
+        for (BeaconRecord beacon : indexedAreas(level, pos)) {
+            if (beacon.function().equals(function.location())) {
                 return true;
             }
         }
         return false;
     }
 
-    private static boolean covers(BeaconRecord beacon, BlockPos pos, ResourceKey<BeaconFunction> function) {
-        return beacon.active()
-                && beacon.function().equals(function.location())
-                && new BeaconArea(beacon.pos(), BeaconholdConfig.SERVER.radius(beacon.pyramidLevel())).contains(pos);
+    /** Gives the active records whose area contains a position, from the spatial index of the dimension. */
+    private static List<BeaconRecord> indexedAreas(ServerLevel level, BlockPos pos) {
+        return BeaconSavedData.get(level)
+                .activeIndex(BeaconholdConfig.SERVER.radii())
+                .containing(pos.getX(), pos.getZ());
     }
 
     /**

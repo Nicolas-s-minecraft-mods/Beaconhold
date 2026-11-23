@@ -66,7 +66,7 @@ Add the name of the function to the language files of your mod. The key is `beac
 
 ## Ask if a beacon covers a position
 
-The queries operate on the server thread. They use the saved list of the beacons, so they do not load chunks.
+The queries operate on the server thread. They use the saved list of the beacons, so they do not load chunks. A spatial index keeps their cost low with many beacons.
 
 ```java
 ResourceKey<BeaconFunction> shield = ExampleFunctions.STORM_SHIELD.getKey();
