@@ -2,13 +2,16 @@ package io.github.nicolasgoyon.beaconhold.gametest;
 
 import io.github.nicolasgoyon.beaconhold.Beaconhold;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
+import io.github.nicolasgoyon.beaconhold.beacon.BeaconTracker;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import io.github.nicolasgoyon.beaconhold.cost.BeaconStock;
 import io.github.nicolasgoyon.beaconhold.cost.CostRules;
 import io.github.nicolasgoyon.beaconhold.menu.BeaconFunctionMenu;
+import io.github.nicolasgoyon.beaconhold.registry.ModRegistries;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -16,6 +19,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -24,6 +29,9 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class CostGameTests {
     private static final int TIMEOUT = 400;
+
+    /** The save test waits for the start, two updates and the tick before a periodic update. */
+    private static final int SAVE_TIMEOUT = 700;
 
     /** The smallest number of ticks for each item, so that a test sees the consumption. */
     private static final int FAST_TICKS_PER_ITEM = CostRules.MIN_TICKS_PER_ITEM;
@@ -37,6 +45,75 @@ public final class CostGameTests {
 
     private static int stockCount(GameTestHelper helper) {
         return BeaconStock.stock(BeaconTestSupport.beaconEntity(helper)).getCount();
+    }
+
+    /**
+     * The stock, the fuel, the time of the last update of the fuel and the function stay after a save and a load of the
+     * beacon, as after a restart of the server. The test puts the loaded beacon in the world one tick before a periodic
+     * update. The beacon stays active and continues to use its fuel.
+     */
+    @GameTest(template = "beacon", timeoutTicks = SAVE_TIMEOUT, batch = "beaconhold_cost_save")
+    public static void stockAndFuelStayAfterSaveAndLoad(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos beacon = BeaconTestSupport.buildBeaconWithNoStock(helper, 1);
+        BeaconTestSupport.setStock(helper, new ItemStack(Items.QUARTZ, 10));
+        BeaconholdApi.setFunction(level, beacon, TestFunctions.TEST);
+        boolean[] watch = new boolean[1];
+        boolean[] stopped = new boolean[1];
+        int[] fuelAtSave = new int[1];
+        helper.onEachTick(() -> {
+            if (watch[0] && !isActive(level, beacon)) {
+                stopped[0] = true;
+            }
+        });
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(isActive(level, beacon), "The function must start"))
+                .thenIdle((int) BeaconTracker.UPDATE_INTERVAL + 1)
+                .thenWaitUntil(() -> helper.assertTrue(
+                        level.getGameTime() % BeaconTracker.UPDATE_INTERVAL == BeaconTracker.UPDATE_INTERVAL - 1,
+                        "Wait for the tick before a periodic update"))
+                .thenExecute(() -> {
+                    BeaconBlockEntity saved = BeaconTestSupport.beaconEntity(helper);
+                    int fuel = BeaconStock.fuel(saved);
+                    long fuelTick = saved.getData(ModRegistries.BEACON_FUEL_TICK);
+                    helper.assertTrue(fuel > 0, "The beacon must have fuel");
+                    helper.assertTrue(
+                            fuel < BeaconholdConfig.SERVER.ticksPerItem(), "The beacon must have used some fuel");
+                    helper.assertTrue(fuelTick > 0L, "The beacon must keep the time of the last update");
+
+                    CompoundTag tag = saved.saveWithFullMetadata(level.registryAccess());
+                    BlockEntity loaded = BlockEntity.loadStatic(beacon, saved.getBlockState(), tag, level.registryAccess());
+                    if (!(loaded instanceof BeaconBlockEntity loadedBeacon)) {
+                        helper.fail("The tag must give a beacon");
+                        return;
+                    }
+                    ItemStack stock = BeaconStock.stock(loadedBeacon);
+                    helper.assertTrue(stock.is(Items.QUARTZ) && stock.getCount() == 9, "The stock must stay");
+                    helper.assertTrue(BeaconStock.fuel(loadedBeacon) == fuel, "The fuel must stay");
+                    helper.assertTrue(
+                            loadedBeacon.getData(ModRegistries.BEACON_FUEL_TICK) == fuelTick,
+                            "The time of the last update of the fuel must stay");
+                    helper.assertTrue(
+                            loadedBeacon.getExistingData(ModRegistries.BEACON_FUNCTION)
+                                    .filter(TestFunctions.TEST.location()::equals)
+                                    .isPresent(),
+                            "The function must stay");
+                    level.setBlockEntity(loadedBeacon);
+                    fuelAtSave[0] = fuel;
+                    watch[0] = true;
+                })
+                .thenIdle(2 * (int) BeaconTracker.UPDATE_INTERVAL + 2)
+                .thenExecute(() -> {
+                    watch[0] = false;
+                    helper.assertFalse(stopped[0], "The loaded beacon must stay active");
+                    helper.assertTrue(isActive(level, beacon), "The loaded beacon must be active");
+                    helper.assertTrue(
+                            BeaconStock.fuel(BeaconTestSupport.beaconEntity(helper)) < fuelAtSave[0],
+                            "The loaded beacon must use its fuel");
+                    helper.assertTrue(stockCount(helper) == 9, "The loaded beacon must not use a new item");
+                    BeaconTestSupport.removeBeacon(helper);
+                })
+                .thenSucceed();
     }
 
     /** A beacon with no stock has no active function. A stock of a consumable starts the function. */
