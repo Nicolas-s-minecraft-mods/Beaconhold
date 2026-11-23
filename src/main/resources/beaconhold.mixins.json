@@ -9,7 +9,8 @@
     "BeaconBlockEntityMixin",
     "BeaconBlockMixin",
     "BeaconMenuAccessor",
-    "BeaconPowersMixin"
+    "BeaconPowersMixin",
+    "BeaconSoundMixin"
   ],
   "injectors": {
     "defaultRequire": 1

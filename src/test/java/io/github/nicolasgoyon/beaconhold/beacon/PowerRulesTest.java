@@ -57,4 +57,38 @@ class PowerRulesTest {
         assertTrue(PowerRules.isOn(false, true, true));
         assertFalse(PowerRules.isOn(false, false, false));
     }
+
+    @Test
+    void beaconThatIsOffIsSilent() {
+        assertFalse(PowerRules.playsVanillaSound(false, true));
+        assertFalse(PowerRules.playsVanillaSound(true, true));
+    }
+
+    @Test
+    void beaconThatIsOnPlaysTheVanillaSoundsButNotTheActivation() {
+        assertTrue(PowerRules.playsVanillaSound(false, false));
+        assertFalse(PowerRules.playsVanillaSound(true, false));
+    }
+
+    @Test
+    void beaconThatGoesOnPlaysTheActivationSound() {
+        assertEquals(PowerRules.PowerSound.ACTIVATE, PowerRules.powerSound(false, true, true));
+    }
+
+    @Test
+    void beaconWithNoConsumableThatGoesOffPlaysTheDeactivationSound() {
+        assertEquals(PowerRules.PowerSound.DEACTIVATE, PowerRules.powerSound(true, false, true));
+    }
+
+    @Test
+    void beaconThatLosesItsPyramidLeavesTheDeactivationSoundToTheVanillaCode() {
+        assertEquals(PowerRules.PowerSound.NONE, PowerRules.powerSound(true, false, false));
+    }
+
+    @Test
+    void beaconWithNoChangeOfStatePlaysNoSound() {
+        assertEquals(PowerRules.PowerSound.NONE, PowerRules.powerSound(true, true, true));
+        assertEquals(PowerRules.PowerSound.NONE, PowerRules.powerSound(false, false, true));
+        assertEquals(PowerRules.PowerSound.NONE, PowerRules.powerSound(false, false, false));
+    }
 }

@@ -55,4 +55,45 @@ public final class PowerRules {
     public static int amplifier(int vanillaAmplifier, int bonus) {
         return vanillaAmplifier + Math.max(0, bonus);
     }
+
+    /**
+     * Tells if a sound of the vanilla code of a beacon plays. A beacon that is off is silent. The vanilla activation
+     * sound never plays: the beacon plays it when its power state goes on (see {@link #powerSound}).
+     *
+     * @param activation true for the activation sound
+     * @param off true if the beacon is off
+     * @return true if the sound plays
+     */
+    public static boolean playsVanillaSound(boolean activation, boolean off) {
+        return !activation && !off;
+    }
+
+    /**
+     * Gives the sound of a change of the power state of a beacon. The beacon plays the activation sound when it goes on. When the pyramid or the beam is lost, the vanilla tick plays the
+     * deactivation sound, so the beacon plays it only when it goes off with no consumable.
+     *
+     * @param wasOn true if the beacon was on before the update
+     * @param on true if the beacon is on after the update
+     * @param canOperate true if the beacon has a pyramid and a free beam after the update
+     * @return the sound to play
+     */
+    public static PowerSound powerSound(boolean wasOn, boolean on, boolean canOperate) {
+        if (!wasOn && on) {
+            return PowerSound.ACTIVATE;
+        }
+        if (wasOn && !on && canOperate) {
+            return PowerSound.DEACTIVATE;
+        }
+        return PowerSound.NONE;
+    }
+
+    /** The sound of a change of the power state of a beacon. */
+    public enum PowerSound {
+        /** No sound. */
+        NONE,
+        /** The vanilla activation sound of the beacon. */
+        ACTIVATE,
+        /** The vanilla deactivation sound of the beacon. */
+        DEACTIVATE
+    }
 }
