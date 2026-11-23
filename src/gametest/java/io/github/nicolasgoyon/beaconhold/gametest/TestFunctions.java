@@ -32,6 +32,7 @@ public final class TestFunctions {
     static {
         NeoForge.EVENT_BUS.addListener(BeaconFunctionEvent.Start.class, TestFunctions::record);
         NeoForge.EVENT_BUS.addListener(BeaconFunctionEvent.Stop.class, TestFunctions::record);
+        NeoForge.EVENT_BUS.addListener(BeaconFunctionEvent.AreaChange.class, TestFunctions::record);
     }
 
     private TestFunctions() {

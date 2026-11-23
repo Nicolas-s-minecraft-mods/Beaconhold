@@ -29,6 +29,18 @@ public final class AreaRadii {
     }
 
     /**
+     * Tells if a change of the radii changes the area of a beacon.
+     *
+     * @param pyramidLevel the pyramid level of the beacon
+     * @param before the radii before the change, for the pyramid levels 1 to {@code before.length}
+     * @param after the radii after the change, for the pyramid levels 1 to {@code after.length}
+     * @return true if the radius of the pyramid level is different
+     */
+    public static boolean radiusChanged(int pyramidLevel, int[] before, int[] after) {
+        return radius(pyramidLevel, before) != radius(pyramidLevel, after);
+    }
+
+    /**
      * Gives a copy of the default radii.
      *
      * @return the default radii in blocks, for the pyramid levels 1 to 4

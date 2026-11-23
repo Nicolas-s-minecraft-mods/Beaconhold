@@ -195,11 +195,20 @@ public final class BeaconholdConfig {
          * @return the radius in blocks, or 0 for the pyramid level 0
          */
         public int radius(int pyramidLevel) {
+            return AreaRadii.radius(pyramidLevel, radii());
+        }
+
+        /**
+         * Gives the radii of the area.
+         *
+         * @return a new array with the radii in blocks, for the pyramid levels 1 to 4
+         */
+        public int[] radii() {
             int[] values = new int[radii.length];
             for (int i = 0; i < radii.length; i++) {
                 values[i] = radii[i].getAsInt();
             }
-            return AreaRadii.radius(pyramidLevel, values);
+            return values;
         }
     }
 

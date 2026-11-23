@@ -5,6 +5,8 @@ import io.github.nicolasgoyon.beaconhold.api.ActiveBeacon;
 import io.github.nicolasgoyon.beaconhold.api.BeaconFunction;
 import io.github.nicolasgoyon.beaconhold.api.BeaconFunctionEvent;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
+import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
+import io.github.nicolasgoyon.beaconhold.config.ServerOptionChanges;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -182,5 +184,53 @@ public final class BeaconApiGameTests {
         }
         BeaconTestSupport.removeBeacon(helper);
         helper.succeed();
+    }
+
+    /**
+     * A new radius in the server options gives an area change event with the old area and the new area. The function
+     * stays active: no stop event and no start event. A change of the limit of the chunks gives no event.
+     */
+    @GameTest(template = "beacon", timeoutTicks = TIMEOUT, batch = "beaconhold_api_area_change")
+    public static void newRadiusGivesAnAreaChangeEvent(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BeaconholdConfig.Server config = BeaconholdConfig.SERVER;
+        int radius = config.radius(1);
+        int newRadius = radius + 10;
+        BlockPos beacon = BeaconTestSupport.buildBeacon(helper, 1);
+        BeaconholdApi.setFunction(level, beacon, TestFunctions.TEST);
+        helper.startSequence()
+                .thenWaitUntil(() -> helper.assertTrue(
+                        BeaconholdApi.isCovered(level, beacon, TestFunctions.TEST), "The beacon must be active"))
+                .thenExecute(() -> {
+                    int limit = config.maxLoadedChunks();
+                    try {
+                        config.setMaxLoadedChunks(limit + 1);
+                        ServerOptionChanges.apply(level.getServer());
+                        helper.assertTrue(TestFunctions.eventsAt(beacon).size() == 1, "A new limit gives no event");
+                        config.setRadius(1, newRadius);
+                        ServerOptionChanges.apply(level.getServer());
+                    } finally {
+                        config.setMaxLoadedChunks(limit);
+                        config.setRadius(1, radius);
+                    }
+                    List<BeaconFunctionEvent> events = TestFunctions.eventsAt(beacon);
+                    helper.assertTrue(events.size() == 2, "Two events: start, then area change");
+                    helper.assertTrue(
+                            events.get(1) instanceof BeaconFunctionEvent.AreaChange change
+                                    && change.getOldArea().radius() == radius
+                                    && change.getBeacon().area().radius() == newRadius
+                                    && change.getBeacon().function().equals(TestFunctions.TEST),
+                            "The area change event has the old area and the new area");
+                    ServerOptionChanges.apply(level.getServer());
+                    List<BeaconFunctionEvent> after = TestFunctions.eventsAt(beacon);
+                    helper.assertTrue(
+                            after.size() == 3
+                                    && after.get(2) instanceof BeaconFunctionEvent.AreaChange back
+                                    && back.getOldArea().radius() == newRadius
+                                    && back.getBeacon().area().radius() == radius,
+                            "The old radius again gives a second area change event");
+                    BeaconTestSupport.removeBeacon(helper);
+                })
+                .thenSucceed();
     }
 }
