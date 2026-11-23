@@ -3,6 +3,7 @@ package io.github.nicolasgoyon.beaconhold.function;
 import io.github.nicolasgoyon.beaconhold.api.ActiveBeacon;
 import io.github.nicolasgoyon.beaconhold.api.BeaconFunctionEvent;
 import io.github.nicolasgoyon.beaconhold.api.BeaconholdApi;
+import io.github.nicolasgoyon.beaconhold.beacon.BeaconSavedData;
 import io.github.nicolasgoyon.beaconhold.config.BeaconholdConfig;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -19,12 +20,14 @@ import net.neoforged.neoforge.common.world.chunk.RegisterTicketControllersEvent;
 import net.neoforged.neoforge.common.world.chunk.TicketController;
 import net.neoforged.neoforge.common.world.chunk.TicketHelper;
 import net.neoforged.neoforge.common.world.chunk.TicketSet;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 
 /**
  * The function "loaded chunks": an active beacon keeps the chunks near it loaded and ticking.
  *
  * <p>NeoForge saves the tickets, so the chunks stay loaded after a restart of the server. When the server loads a
- * world, it removes the tickets that the saved list of the beacons does not contain.
+ * world, it removes the tickets that the saved list of the chunks does not contain. When the server starts, it makes the
+ * tickets agree with the saved lists (see {@link #restore(ServerLevel)}).
  */
 public final class LoadedChunks {
     /** The controller of the chunk tickets of the beacons. */
@@ -43,6 +46,40 @@ public final class LoadedChunks {
         modEventBus.addListener(RegisterTicketControllersEvent.class, event -> event.register(CONTROLLER));
         NeoForge.EVENT_BUS.addListener(BeaconFunctionEvent.Start.class, LoadedChunks::onStart);
         NeoForge.EVENT_BUS.addListener(BeaconFunctionEvent.Stop.class, LoadedChunks::onStop);
+        NeoForge.EVENT_BUS.addListener(ServerStartedEvent.class, event -> {
+            for (ServerLevel level : event.getServer().getAllLevels()) {
+                restore(level);
+            }
+        });
+    }
+
+    /**
+     * Makes the tickets of a dimension agree with the saved lists. The server calls this method when it starts.
+     *
+     * <ul>
+     *   <li>A beacon that is active with the function "loaded chunks" in the saved list of the beacons gets a ticket for
+     *       each of its saved chunks.
+     *   <li>The other beacons of the saved list of the chunks release their chunks.
+     * </ul>
+     *
+     * @param level the dimension
+     */
+    public static void restore(ServerLevel level) {
+        LoadedChunksSavedData data = LoadedChunksSavedData.get(level);
+        BeaconSavedData beacons = BeaconSavedData.get(level);
+        for (BlockPos pos : data.positions()) {
+            if (!ChunkRules.keepsChunks(beacons.get(pos), ModFunctions.LOADED_CHUNKS.getId())) {
+                release(level, pos);
+                continue;
+            }
+            LongSet chunks = data.get(pos);
+            if (chunks != null) {
+                for (LongIterator it = chunks.iterator(); it.hasNext(); ) {
+                    ChunkPos chunk = new ChunkPos(it.nextLong());
+                    CONTROLLER.forceChunk(level, pos, chunk.x, chunk.z, true, true);
+                }
+            }
+        }
     }
 
     private static boolean isLoadedChunks(ActiveBeacon beacon) {
